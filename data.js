@@ -139,7 +139,7 @@ function renderNav(activeFile) {
 
   const navGroups = [
     { label: "總覽", links: [["巴赫花精整理筆記.html", "首頁總覽"]] },
-    { label: "花精系統", links: [["core.html", "核心觀念"], ["categories.html", "巴赫七大分類"], ["rescue.html", "急救花精"], ["inner-outer.html", "內在 / 外在 / 基礎花精"]] },
+    { label: "分類法", links: [["core.html", "核心觀念"], ["categories.html", "巴赫七大分類"], ["rescue.html", "急救花精"], ["inner-outer.html", "內在 / 外在 / 基礎花精"]] },
     { label: "身體地圖", links: [["body-map.html", "身體地圖"]] },
     { label: "花精大全", links: [["flowers.html", "總表查詢"], ["comparison.html", "容易混淆"]] },
     { label: "個人", links: [["decision.html", "判斷"], ["records.html", "紀錄"]] }
