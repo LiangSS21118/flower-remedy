@@ -138,12 +138,13 @@ function renderNav(activeFile) {
   if (!nav) return;
 
   const links = [
-    ["巴赫花精整理筆記.html", "首頁重點"],
+    ["巴赫花精整理筆記.html", "總覽"],
     ["core.html", "核心觀念"],
-    ["categories.html", "七大分類"],
+    ["categories.html", "分類系統"],
     ["rescue.html", "急救花精"],
     ["flowers.html", "38 朵花精"],
     ["body-map.html", "身體地圖"],
+    ["tracks.html", "花精軌道"],
     ["decision.html", "判斷流程"],
     ["records.html", "自我紀錄"],
     ["comparison.html", "容易混淆"],

@@ -273,6 +273,116 @@ section,
   margin: 0 auto;
 }
 
+.home-overview-section,
+.learning-path-section,
+.system-section {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+}
+
+.overview-card {
+  display: block;
+  min-height: 260px;
+  padding: 18px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.overview-card:hover {
+  background: var(--soft);
+  text-decoration: none;
+}
+
+.overview-card h2 {
+  margin: 20px 0 14px;
+  font-size: clamp(25px, 2.7vw, 34px);
+}
+
+.overview-card p {
+  color: var(--muted);
+}
+
+.overview-kicker,
+.section-heading .eyebrow {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.section-heading {
+  max-width: 760px;
+  margin-bottom: 24px;
+}
+
+.section-heading p:not(.eyebrow) {
+  color: var(--muted);
+}
+
+.path-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+
+.path-list li {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.35fr) minmax(0, 1fr);
+  gap: 18px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.path-list a {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.path-list span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.system-grid,
+.placeholder-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+
+.system-grid a,
+.system-grid span,
+.placeholder-grid article {
+  min-height: 96px;
+  padding: 18px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.system-grid a {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.system-grid span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.placeholder-grid h3 {
+  margin-top: 0;
+}
+
 .home-focus-tools {
   display: grid;
   grid-template-columns: minmax(220px, 0.7fr) minmax(420px, 1.3fr);
@@ -829,6 +939,12 @@ footer {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .overview-grid,
+  .system-grid,
+  .placeholder-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .split-page {
     grid-template-columns: 1fr;
   }
@@ -920,6 +1036,17 @@ footer {
   .focus-list,
   .home-focus-results .focus-list {
     grid-template-columns: 1fr;
+  }
+
+  .overview-grid,
+  .system-grid,
+  .placeholder-grid,
+  .path-list li {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-card {
+    min-height: 0;
   }
 
   .body-region-list,
