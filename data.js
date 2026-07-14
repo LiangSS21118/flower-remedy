@@ -152,7 +152,7 @@ function renderNav(activeFile) {
         <button class="icon-button" type="button" id="openMenu" aria-label="開啟分頁選單">☰</button>
         <a class="brand-mark" href="巴赫花精整理筆記.html">
           <span>新巴赫花精</span>
-          <small>Bach Flower Notes</small>
+          <small>花精大全</small>
         </a>
         <button class="icon-button" type="button" id="openSettings">設定</button>
         <div class="desktop-nav">
@@ -757,7 +757,7 @@ function initDecisionPage() {
     });
     result.innerHTML = `
       <div class="section-heading">
-        <p class="eyebrow">Possible remedies</p>
+        <p class="eyebrow">候選花精</p>
         <h2>${escapeHTML(category)}</h2>
         <p>以下是這個狀態分類下可以先查看的花精。請再依自己的實際狀態確認，不要只靠分類直接決定。</p>
       </div>
