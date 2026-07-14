@@ -139,11 +139,9 @@ function renderNav(activeFile) {
 
   const navGroups = [
     { label: "總覽", links: [["巴赫花精整理筆記.html", "首頁總覽"]] },
-    { label: "學習", links: [["core.html", "核心觀念"], ["categories.html", "分類系統"], ["rescue.html", "急救花精"]] },
-    { label: "查花精", links: [["flowers.html", "38 朵花精"]] },
-    { label: "選花精", links: [["decision.html", "判斷流程"], ["body-map.html", "身體地圖"]] },
-    { label: "進階系統", links: [["tracks.html", "花精軌道"]] },
-    { label: "複習", links: [["comparison.html", "容易混淆"], ["review.html", "複習建議"], ["records.html", "自我紀錄"]] }
+    { label: "分類系統", links: [["categories.html", "分類入口"], ["core.html", "核心觀念"], ["rescue.html", "急救花精"], ["body-map.html", "身體地圖"], ["tracks.html", "花精軌道"]] },
+    { label: "花精大全", links: [["flowers.html", "總表查詢"], ["comparison.html", "容易混淆"]] },
+    { label: "個人", links: [["decision.html", "判斷"], ["records.html", "紀錄"], ["review.html", "複習建議"]] }
   ];
   const links = navGroups.flatMap((group) => group.links);
   const activeLabel = links.find(([href]) => href === activeFile)?.[1] || "筆記";
@@ -227,9 +225,15 @@ function renderFocusList() {
   const focusList = document.querySelector("#focusList");
   if (!focusList) return;
 
-  const items = readList(focusStorageKey);
+  const sortMode = document.querySelector("#focusSort")?.value || "manual";
+  const items = readList(focusStorageKey).slice();
+  if (sortMode === "match") {
+    items.sort((a, b) => Number(b.match || 0) - Number(a.match || 0));
+  } else if (sortMode === "newest") {
+    items.sort((a, b) => Number(b.createdAt || b.id || 0) - Number(a.createdAt || a.id || 0));
+  }
   if (items.length === 0) {
-    focusList.innerHTML = '<p class="empty-state">尚未加入重點花精。</p>';
+    focusList.innerHTML = '<p class="empty-state">尚未收藏花精。</p>';
     return;
   }
 
@@ -246,11 +250,12 @@ function renderFocusList() {
         </div>
         <span class="tag">${escapeHTML(flower.category)}</span>
         ${item.reason ? `<p><strong>自身情況：</strong>${escapeHTML(item.reason)}</p>` : ""}
+        ${item.match ? `<p><strong>匹配程度：</strong>${escapeHTML(item.match)} / 5</p>` : ""}
         <p><strong>負面特質：</strong>${escapeHTML(flower.negative)}</p>
         <p><strong>正面方向：</strong>${escapeHTML(flower.positive)}</p>
         <p class="record-actions">
-          <button class="small-button" type="button" data-move-focus="${item.id}" data-direction="-1" ${index === 0 ? "disabled" : ""}>前移</button>
-          <button class="small-button" type="button" data-move-focus="${item.id}" data-direction="1" ${index === items.length - 1 ? "disabled" : ""}>後移</button>
+          <button class="small-button" type="button" data-move-focus="${item.id}" data-direction="-1" ${index === 0 || sortMode !== "manual" ? "disabled" : ""}>前移</button>
+          <button class="small-button" type="button" data-move-focus="${item.id}" data-direction="1" ${index === items.length - 1 || sortMode !== "manual" ? "disabled" : ""}>後移</button>
           <button class="small-button danger" type="button" data-delete-focus="${item.id}">移除</button>
         </p>
       </article>
@@ -496,7 +501,7 @@ function renderSyncPanel() {
     .catch(() => setSyncStatus("無法讀取同步狀態。"));
 }
 
-function addFocusItem(flowerName, reason = "") {
+function addFocusItem(flowerName, reason = "", match = "") {
   const flower = findFlower(flowerName);
   if (!flower) return;
 
@@ -504,12 +509,20 @@ function addFocusItem(flowerName, reason = "") {
   const existing = items.find((item) => item.flower === flowerName);
   if (existing) {
     existing.reason = reason || existing.reason;
+    existing.match = match || existing.match;
+    existing.updatedAt = Date.now();
     saveList(focusStorageKey, items);
     renderFocusList();
     return;
   }
 
-  items.unshift({ id: String(Date.now()), flower: flowerName, reason: reason.trim() });
+  items.unshift({
+    id: String(Date.now()),
+    flower: flowerName,
+    reason: reason.trim(),
+    match,
+    createdAt: Date.now()
+  });
   saveList(focusStorageKey, items);
   renderFocusList();
 }
@@ -522,12 +535,18 @@ function initHomePage() {
   const list = document.querySelector("#focusList");
   let draggedFocusId = null;
 
-  select.insertAdjacentHTML("beforeend", flowerOptions());
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    addFocusItem(select.value, reason.value);
-    form.reset();
-  });
+  if (select) select.insertAdjacentHTML("beforeend", flowerOptions());
+  if (form) {
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      addFocusItem(select.value, reason.value);
+      form.reset();
+    });
+  }
+  if (!list) {
+    renderFocusList();
+    return;
+  }
   list.addEventListener("click", (event) => {
     const moveButton = event.target.closest("[data-move-focus]");
     if (moveButton) {
@@ -590,6 +609,13 @@ function initFlowersPage() {
   const search = document.querySelector("#searchInput");
   const category = document.querySelector("#categoryFilter");
   const count = document.querySelector("#resultCount");
+  const focusDialog = document.querySelector("#focusDialog");
+  const focusDialogForm = document.querySelector("#focusDialogForm");
+  const focusDialogFlower = document.querySelector("#focusDialogFlower");
+  const focusDialogNote = document.querySelector("#focusDialogNote");
+  const focusDialogMatch = document.querySelector("#focusDialogMatch");
+  const focusDialogMatchValue = document.querySelector("#focusDialogMatchValue");
+  const closeFocusDialog = document.querySelector("#closeFocusDialog");
 
   function render() {
     const query = search.value.trim().toLowerCase();
@@ -609,16 +635,31 @@ function initFlowersPage() {
         <h3><span>${flower.no}. ${flower.name}</span><span class="english">${flower.english}</span></h3>
         <div class="flower-meta">
           <span class="tag">${flower.category}</span>
-          ${isFocused ? '<span class="focus-badge">已加入重點筆記</span>' : ""}
+          ${isFocused ? '<span class="focus-badge">已加入個人紀錄</span>' : ""}
         </div>
         <dl>
           <div><dt>負面特質 / 狀態</dt><dd>${flower.negative}</dd></div>
           <div><dt>正面頻率 / 方向</dt><dd>${flower.positive}</dd></div>
         </dl>
-        <p><button class="small-button" type="button" data-add-focus="${flower.name}" ${isFocused ? "disabled" : ""}>${isFocused ? "已加入重點" : "加入首頁重點"}</button></p>
+        <p><button class="small-button" type="button" data-add-focus="${flower.name}">${isFocused ? "更新個人紀錄" : "加入個人紀錄"}</button></p>
       </article>
     `;
     }).join("");
+  }
+
+  function openFocusDialog(flowerName) {
+    const existing = readList(focusStorageKey).find((item) => item.flower === flowerName);
+    focusDialogFlower.value = flowerName;
+    focusDialogNote.value = existing?.reason || "";
+    focusDialogMatch.value = existing?.match || "3";
+    focusDialogMatchValue.textContent = focusDialogMatch.value;
+    focusDialog.hidden = false;
+    focusDialogNote.focus();
+  }
+
+  function hideFocusDialog() {
+    focusDialog.hidden = true;
+    focusDialogForm.reset();
   }
 
   search.addEventListener("input", render);
@@ -626,8 +667,20 @@ function initFlowersPage() {
   cards.addEventListener("click", (event) => {
     const button = event.target.closest("[data-add-focus]");
     if (!button) return;
-    addFocusItem(button.dataset.addFocus);
-    window.location.href = "巴赫花精整理筆記.html";
+    openFocusDialog(button.dataset.addFocus);
+  });
+  focusDialogMatch.addEventListener("input", () => {
+    focusDialogMatchValue.textContent = focusDialogMatch.value;
+  });
+  closeFocusDialog.addEventListener("click", hideFocusDialog);
+  focusDialog.addEventListener("click", (event) => {
+    if (event.target === focusDialog) hideFocusDialog();
+  });
+  focusDialogForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    addFocusItem(focusDialogFlower.value, focusDialogNote.value, focusDialogMatch.value);
+    hideFocusDialog();
+    render();
   });
   render();
 }
@@ -665,7 +718,7 @@ function initBodyMapPage() {
             <span class="tag">${escapeHTML(flower.category)}</span>
             <p><strong>負面特質：</strong>${escapeHTML(flower.negative)}</p>
             <p><strong>正面方向：</strong>${escapeHTML(flower.positive)}</p>
-            <p><button class="small-button" type="button" data-add-focus="${escapeHTML(flower.name)}">加入首頁重點</button></p>
+            <p><button class="small-button" type="button" data-add-focus="${escapeHTML(flower.name)}">加入個人紀錄</button></p>
           </div>
         </article>
       `;
@@ -676,7 +729,7 @@ function initBodyMapPage() {
     const addButton = event.target.closest("[data-add-focus]");
     if (!addButton) return;
     addFocusItem(addButton.dataset.addFocus);
-    addButton.textContent = "已加入重點";
+    addButton.textContent = "已加入個人紀錄";
     addButton.disabled = true;
   });
 
@@ -692,8 +745,57 @@ function initBodyMapPage() {
   render("lower-abdomen");
 }
 
+function initDecisionPage() {
+  renderNav("decision.html");
+  const buttons = document.querySelectorAll("[data-decision-category]");
+  const result = document.querySelector("#decisionResult");
+
+  function render(category) {
+    const matched = flowers.filter((flower) => flower.category === category);
+    buttons.forEach((button) => {
+      button.classList.toggle("active", button.dataset.decisionCategory === category);
+    });
+    result.innerHTML = `
+      <div class="section-heading">
+        <p class="eyebrow">Possible remedies</p>
+        <h2>${escapeHTML(category)}</h2>
+        <p>以下是這個狀態分類下可以先查看的花精。請再依自己的實際狀態確認，不要只靠分類直接決定。</p>
+      </div>
+      <div class="decision-card-grid">
+        ${matched.map((flower) => `
+          <article class="decision-card">
+            <h3>${escapeHTML(flower.name)} <span class="english">${escapeHTML(flower.english)}</span></h3>
+            <p><strong>負面特質：</strong>${escapeHTML(flower.negative)}</p>
+            <p><strong>正面方向：</strong>${escapeHTML(flower.positive)}</p>
+            <button class="small-button" type="button" data-add-decision-focus="${escapeHTML(flower.name)}">加入個人紀錄</button>
+          </article>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => render(button.dataset.decisionCategory));
+  });
+
+  result.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-add-decision-focus]");
+    if (!button) return;
+    const flowerName = button.dataset.addDecisionFocus;
+    const ok = window.confirm(`要把「${flowerName}」加入個人紀錄嗎？`);
+    if (!ok) return;
+    addFocusItem(flowerName, "由判斷流程加入，之後可在個人紀錄補充備註。", "3");
+    button.textContent = "已加入個人紀錄";
+    button.disabled = true;
+  });
+
+  render("恐懼");
+}
+
 function initRecordsPage() {
   renderNav("records.html");
+  const focusSort = document.querySelector("#focusSort");
+  const focusList = document.querySelector("#focusList");
   const form = document.querySelector("#recordForm");
   const date = document.querySelector("#recordDate");
   const flower = document.querySelector("#recordFlower");
@@ -702,6 +804,7 @@ function initRecordsPage() {
   const observation = document.querySelector("#recordObservation");
   const list = document.querySelector("#recordList");
   const clear = document.querySelector("#clearRecordForm");
+  let draggedFocusId = null;
 
   function reset() {
     form.reset();
@@ -709,6 +812,56 @@ function initRecordsPage() {
   }
 
   flower.insertAdjacentHTML("beforeend", flowerOptions());
+  focusSort.addEventListener("change", renderFocusList);
+  focusList.addEventListener("click", (event) => {
+    const moveButton = event.target.closest("[data-move-focus]");
+    if (moveButton) {
+      moveFocusItem(moveButton.dataset.moveFocus, Number(moveButton.dataset.direction));
+      return;
+    }
+
+    const deleteButton = event.target.closest("[data-delete-focus]");
+    if (!deleteButton) return;
+    saveList(focusStorageKey, readList(focusStorageKey).filter((item) => item.id !== deleteButton.dataset.deleteFocus));
+    renderFocusList();
+  });
+  focusList.addEventListener("dragstart", (event) => {
+    const card = event.target.closest("[data-focus-id]");
+    if (!card) return;
+    if (event.target.closest("button, input, select, textarea, a")) {
+      event.preventDefault();
+      return;
+    }
+    draggedFocusId = card.dataset.focusId;
+    card.classList.add("is-dragging");
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", draggedFocusId);
+  });
+  focusList.addEventListener("dragover", (event) => {
+    const card = event.target.closest("[data-focus-id]");
+    event.preventDefault();
+    document.querySelectorAll(".focus-card.is-drop-target-before, .focus-card.is-drop-target-after").forEach((item) => {
+      item.classList.remove("is-drop-target-before", "is-drop-target-after");
+    });
+    if (!card || card.dataset.focusId === draggedFocusId) return;
+    card.classList.add(`is-drop-target-${getFocusDropPlacement(event, card)}`);
+  });
+  focusList.addEventListener("drop", (event) => {
+    const card = event.target.closest("[data-focus-id]");
+    event.preventDefault();
+    const draggedId = event.dataTransfer.getData("text/plain") || draggedFocusId;
+    if (card) {
+      reorderFocusItem(draggedId, card.dataset.focusId, getFocusDropPlacement(event, card));
+    } else {
+      moveFocusToEnd(draggedId);
+    }
+    draggedFocusId = null;
+    clearFocusDropState();
+  });
+  focusList.addEventListener("dragend", () => {
+    draggedFocusId = null;
+    clearFocusDropState();
+  });
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const records = readList(recordStorageKey);
@@ -746,6 +899,7 @@ function initRecordsPage() {
     }
   });
   reset();
+  renderFocusList();
   renderRecordsList();
 }
 
