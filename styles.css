@@ -658,6 +658,13 @@ section,
   border-bottom: 1px solid var(--line);
 }
 
+body.home-page .home-focus-tools {
+  display: block;
+  max-width: 620px;
+  margin: 0 auto;
+  text-align: center;
+}
+
 .home-focus-tools .record-form {
   margin-bottom: 0;
   padding-bottom: 0;
