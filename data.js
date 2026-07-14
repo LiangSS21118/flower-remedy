@@ -225,13 +225,11 @@ function renderFocusList() {
   const focusList = document.querySelector("#focusList");
   if (!focusList) return;
 
-  const sortMode = document.querySelector("#focusSort")?.value || "manual";
   const items = readList(focusStorageKey).slice();
-  if (sortMode === "match") {
-    items.sort((a, b) => Number(b.match || 0) - Number(a.match || 0));
-  } else if (sortMode === "newest") {
-    items.sort((a, b) => Number(b.createdAt || b.id || 0) - Number(a.createdAt || a.id || 0));
-  }
+  items.sort((a, b) => (
+    Number(b.match || 0) - Number(a.match || 0)
+    || Number(b.createdAt || b.id || 0) - Number(a.createdAt || a.id || 0)
+  ));
   if (items.length === 0) {
     focusList.innerHTML = '<p class="empty-state">尚未收藏花精。</p>';
     return;
@@ -242,11 +240,10 @@ function renderFocusList() {
     if (!flower) return "";
 
     return `
-      <article class="focus-card" draggable="true" data-focus-id="${item.id}">
+      <article class="focus-card" data-focus-id="${item.id}">
         <img class="flower-image" src="${escapeHTML(flower.image)}" alt="${escapeHTML(flower.imageAlt)}" loading="lazy">
         <div class="focus-card-header">
           <h3>${escapeHTML(flower.name)} <span class="english">${escapeHTML(flower.english)}</span></h3>
-          <span class="drag-handle" aria-hidden="true">拖曳</span>
         </div>
         <span class="tag">${escapeHTML(flower.category)}</span>
         ${item.reason ? `<p><strong>自身情況：</strong>${escapeHTML(item.reason)}</p>` : ""}
@@ -254,68 +251,11 @@ function renderFocusList() {
         <p><strong>負面特質：</strong>${escapeHTML(flower.negative)}</p>
         <p><strong>正面方向：</strong>${escapeHTML(flower.positive)}</p>
         <p class="record-actions">
-          <button class="small-button" type="button" data-move-focus="${item.id}" data-direction="-1" ${index === 0 || sortMode !== "manual" ? "disabled" : ""}>前移</button>
-          <button class="small-button" type="button" data-move-focus="${item.id}" data-direction="1" ${index === items.length - 1 || sortMode !== "manual" ? "disabled" : ""}>後移</button>
           <button class="small-button danger" type="button" data-delete-focus="${item.id}">移除</button>
         </p>
       </article>
     `;
   }).join("");
-}
-
-function moveFocusItem(id, direction) {
-  const items = readList(focusStorageKey);
-  const currentIndex = items.findIndex((item) => item.id === id);
-  if (currentIndex < 0) return;
-
-  const targetIndex = Math.max(0, Math.min(items.length - 1, currentIndex + direction));
-  if (targetIndex === currentIndex) return;
-
-  const [item] = items.splice(currentIndex, 1);
-  items.splice(targetIndex, 0, item);
-  saveList(focusStorageKey, items);
-  renderFocusList();
-}
-
-function reorderFocusItem(draggedId, targetId, placement = "before") {
-  if (!draggedId || !targetId || draggedId === targetId) return;
-
-  const items = readList(focusStorageKey);
-  const draggedIndex = items.findIndex((item) => item.id === draggedId);
-  if (draggedIndex < 0) return;
-
-  const [item] = items.splice(draggedIndex, 1);
-  const targetIndex = items.findIndex((entry) => entry.id === targetId);
-  if (targetIndex < 0) return;
-
-  const insertIndex = placement === "after" ? targetIndex + 1 : targetIndex;
-  items.splice(insertIndex, 0, item);
-  saveList(focusStorageKey, items);
-  renderFocusList();
-}
-
-function moveFocusToEnd(draggedId) {
-  const items = readList(focusStorageKey);
-  const draggedIndex = items.findIndex((item) => item.id === draggedId);
-  if (draggedIndex < 0 || draggedIndex === items.length - 1) return;
-
-  const [item] = items.splice(draggedIndex, 1);
-  items.push(item);
-  saveList(focusStorageKey, items);
-  renderFocusList();
-}
-
-function getFocusDropPlacement(event, card) {
-  const rect = card.getBoundingClientRect();
-  const isRightHalf = event.clientX > rect.left + rect.width / 2;
-  const isBottomThird = event.clientY > rect.top + rect.height * 0.66;
-  return isRightHalf || isBottomThird ? "after" : "before";
-}
-
-function clearFocusDropState() {
-  document.querySelectorAll(".focus-card.is-dragging, .focus-card.is-drop-target-before, .focus-card.is-drop-target-after").forEach((card) => {
-    card.classList.remove("is-dragging", "is-drop-target-before", "is-drop-target-after");
-  });
 }
 
 function buildSyncPayload() {
@@ -533,7 +473,6 @@ function initHomePage() {
   const select = document.querySelector("#focusFlower");
   const reason = document.querySelector("#focusReason");
   const list = document.querySelector("#focusList");
-  let draggedFocusId = null;
 
   if (select) select.insertAdjacentHTML("beforeend", flowerOptions());
   if (form) {
@@ -548,57 +487,10 @@ function initHomePage() {
     return;
   }
   list.addEventListener("click", (event) => {
-    const moveButton = event.target.closest("[data-move-focus]");
-    if (moveButton) {
-      moveFocusItem(moveButton.dataset.moveFocus, Number(moveButton.dataset.direction));
-      return;
-    }
-
     const deleteButton = event.target.closest("[data-delete-focus]");
     if (!deleteButton) return;
     saveList(focusStorageKey, readList(focusStorageKey).filter((item) => item.id !== deleteButton.dataset.deleteFocus));
     renderFocusList();
-  });
-  list.addEventListener("dragstart", (event) => {
-    const card = event.target.closest("[data-focus-id]");
-    if (!card) return;
-    if (event.target.closest("button, input, select, textarea, a")) {
-      event.preventDefault();
-      return;
-    }
-    draggedFocusId = card.dataset.focusId;
-    card.classList.add("is-dragging");
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("text/plain", draggedFocusId);
-  });
-  list.addEventListener("dragover", (event) => {
-    const card = event.target.closest("[data-focus-id]");
-    event.preventDefault();
-    document.querySelectorAll(".focus-card.is-drop-target-before, .focus-card.is-drop-target-after").forEach((item) => {
-      item.classList.remove("is-drop-target-before", "is-drop-target-after");
-    });
-    if (!card || card.dataset.focusId === draggedFocusId) return;
-    card.classList.add(`is-drop-target-${getFocusDropPlacement(event, card)}`);
-  });
-  list.addEventListener("dragleave", (event) => {
-    const card = event.target.closest("[data-focus-id]");
-    if (card) card.classList.remove("is-drop-target-before", "is-drop-target-after");
-  });
-  list.addEventListener("drop", (event) => {
-    const card = event.target.closest("[data-focus-id]");
-    event.preventDefault();
-    const draggedId = event.dataTransfer.getData("text/plain") || draggedFocusId;
-    if (card) {
-      reorderFocusItem(draggedId, card.dataset.focusId, getFocusDropPlacement(event, card));
-    } else {
-      moveFocusToEnd(draggedId);
-    }
-    draggedFocusId = null;
-    clearFocusDropState();
-  });
-  list.addEventListener("dragend", () => {
-    draggedFocusId = null;
-    clearFocusDropState();
   });
   renderFocusList();
 }
@@ -794,7 +686,6 @@ function initDecisionPage() {
 
 function initRecordsPage() {
   renderNav("records.html");
-  const focusSort = document.querySelector("#focusSort");
   const focusList = document.querySelector("#focusList");
   const form = document.querySelector("#recordForm");
   const date = document.querySelector("#recordDate");
@@ -804,7 +695,6 @@ function initRecordsPage() {
   const observation = document.querySelector("#recordObservation");
   const list = document.querySelector("#recordList");
   const clear = document.querySelector("#clearRecordForm");
-  let draggedFocusId = null;
 
   function reset() {
     form.reset();
@@ -812,55 +702,11 @@ function initRecordsPage() {
   }
 
   flower.insertAdjacentHTML("beforeend", flowerOptions());
-  focusSort.addEventListener("change", renderFocusList);
   focusList.addEventListener("click", (event) => {
-    const moveButton = event.target.closest("[data-move-focus]");
-    if (moveButton) {
-      moveFocusItem(moveButton.dataset.moveFocus, Number(moveButton.dataset.direction));
-      return;
-    }
-
     const deleteButton = event.target.closest("[data-delete-focus]");
     if (!deleteButton) return;
     saveList(focusStorageKey, readList(focusStorageKey).filter((item) => item.id !== deleteButton.dataset.deleteFocus));
     renderFocusList();
-  });
-  focusList.addEventListener("dragstart", (event) => {
-    const card = event.target.closest("[data-focus-id]");
-    if (!card) return;
-    if (event.target.closest("button, input, select, textarea, a")) {
-      event.preventDefault();
-      return;
-    }
-    draggedFocusId = card.dataset.focusId;
-    card.classList.add("is-dragging");
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("text/plain", draggedFocusId);
-  });
-  focusList.addEventListener("dragover", (event) => {
-    const card = event.target.closest("[data-focus-id]");
-    event.preventDefault();
-    document.querySelectorAll(".focus-card.is-drop-target-before, .focus-card.is-drop-target-after").forEach((item) => {
-      item.classList.remove("is-drop-target-before", "is-drop-target-after");
-    });
-    if (!card || card.dataset.focusId === draggedFocusId) return;
-    card.classList.add(`is-drop-target-${getFocusDropPlacement(event, card)}`);
-  });
-  focusList.addEventListener("drop", (event) => {
-    const card = event.target.closest("[data-focus-id]");
-    event.preventDefault();
-    const draggedId = event.dataTransfer.getData("text/plain") || draggedFocusId;
-    if (card) {
-      reorderFocusItem(draggedId, card.dataset.focusId, getFocusDropPlacement(event, card));
-    } else {
-      moveFocusToEnd(draggedId);
-    }
-    draggedFocusId = null;
-    clearFocusDropState();
-  });
-  focusList.addEventListener("dragend", () => {
-    draggedFocusId = null;
-    clearFocusDropState();
   });
   form.addEventListener("submit", (event) => {
     event.preventDefault();
