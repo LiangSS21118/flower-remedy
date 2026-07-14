@@ -139,10 +139,11 @@ function renderNav(activeFile) {
 
   const navGroups = [
     { label: "總覽", links: [["巴赫花精整理筆記.html", "首頁總覽"]] },
-    { label: "入門", links: [["core.html", "核心觀念"], ["categories.html", "分類系統"], ["rescue.html", "急救花精"]] },
-    { label: "查詢", links: [["flowers.html", "38 朵花精"], ["decision.html", "判斷流程"], ["comparison.html", "容易混淆"]] },
-    { label: "進階", links: [["body-map.html", "身體地圖"], ["tracks.html", "花精軌道"]] },
-    { label: "個人", links: [["records.html", "自我紀錄"], ["review.html", "複習建議"]] }
+    { label: "學習", links: [["core.html", "核心觀念"], ["categories.html", "分類系統"], ["rescue.html", "急救花精"]] },
+    { label: "查花精", links: [["flowers.html", "38 朵花精"]] },
+    { label: "選花精", links: [["decision.html", "判斷流程"], ["body-map.html", "身體地圖"]] },
+    { label: "進階系統", links: [["tracks.html", "花精軌道"]] },
+    { label: "複習", links: [["comparison.html", "容易混淆"], ["review.html", "複習建議"], ["records.html", "自我紀錄"]] }
   ];
   const links = navGroups.flatMap((group) => group.links);
   const activeLabel = links.find(([href]) => href === activeFile)?.[1] || "筆記";
