@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>巴赫花精整理筆記｜情緒反應身體地圖</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="data.js" defer></script>
+  <script defer>document.addEventListener("DOMContentLoaded", () => initBodyMapPage());</script>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">身體地圖</p>
+      <h1>情緒反應身體地圖表</h1>
+      <p>點擊身體區域，查看該區目前整理到的對應花精。</p>
+    </div>
+  </header>
+
+  <main class="page">
+    <nav class="nav" data-nav aria-label="筆記頁面"></nav>
+
+    <section class="body-map-section">
+      <div class="body-map-layout">
+        <div class="body-map-stage" aria-label="可互動身體地圖">
+          <svg class="body-map-svg" viewBox="0 0 360 560" role="img" aria-labelledby="bodyMapSvgTitle bodyMapSvgDesc">
+            <title id="bodyMapSvgTitle">情緒反應身體地圖</title>
+            <desc id="bodyMapSvgDesc">簡化的人體正面圖，可點選頸部、胸背、腹部、骨盆與左右側區域。</desc>
+
+            <path class="body-outline" d="M180 28c25 0 44 19 44 45 0 24-18 45-44 45s-44-21-44-45c0-26 19-45 44-45Z"/>
+            <path class="body-outline" d="M132 116h96l42 64 18 156-34 166h-51l-23-98-23 98h-51L72 336l18-156 42-64Z"/>
+            <path class="body-line" d="M132 116l48 80 48-80M92 184l68 38M268 184l-68 38M108 286h144M101 384h158M180 196v306"/>
+
+            <g class="body-zone" data-region="neck" role="button" tabindex="0" aria-label="頸部">
+              <rect x="153" y="112" width="54" height="58" rx="4"/>
+              <text x="180" y="146">頸</text>
+            </g>
+            <g class="body-zone" data-region="upper-chest" role="button" tabindex="0" aria-label="上胸背部">
+              <polygon points="115,166 245,166 262,228 98,228"/>
+              <text x="180" y="202">上胸</text>
+            </g>
+            <g class="body-zone" data-region="middle-chest" role="button" tabindex="0" aria-label="胸背中段">
+              <polygon points="98,232 262,232 248,292 112,292"/>
+              <text x="180" y="266">胸背</text>
+            </g>
+            <g class="body-zone" data-region="upper-abdomen" role="button" tabindex="0" aria-label="上腹區">
+              <polygon points="112,296 248,296 232,360 128,360"/>
+              <text x="180" y="334">上腹</text>
+            </g>
+            <g class="body-zone" data-region="lower-abdomen" role="button" tabindex="0" aria-label="下腹區">
+              <polygon points="128,364 232,364 252,424 108,424"/>
+              <text x="180" y="402">下腹</text>
+            </g>
+            <g class="body-zone" data-region="pelvis" role="button" tabindex="0" aria-label="骨盆區">
+              <polygon points="108,428 252,428 218,496 142,496"/>
+              <text x="180" y="466">骨盆</text>
+            </g>
+            <g class="body-zone side-zone" data-region="left-side" role="button" tabindex="0" aria-label="左側身體">
+              <polygon points="72,194 99,230 108,424 85,424 58,336"/>
+              <text x="86" y="318">左</text>
+            </g>
+            <g class="body-zone side-zone" data-region="right-side" role="button" tabindex="0" aria-label="右側身體">
+              <polygon points="288,194 261,230 252,424 275,424 302,336"/>
+              <text x="274" y="318">右</text>
+            </g>
+          </svg>
+
+          <div class="body-region-list" aria-label="身體區域快速選擇">
+            <button class="small-button" type="button" data-region="neck">頸部</button>
+            <button class="small-button" type="button" data-region="upper-chest">上胸背部</button>
+            <button class="small-button" type="button" data-region="middle-chest">胸背中段</button>
+            <button class="small-button" type="button" data-region="upper-abdomen">上腹區</button>
+            <button class="small-button" type="button" data-region="lower-abdomen">下腹區</button>
+            <button class="small-button" type="button" data-region="pelvis">骨盆區</button>
+            <button class="small-button" type="button" data-region="left-side">左側身體</button>
+            <button class="small-button" type="button" data-region="right-side">右側身體</button>
+          </div>
+        </div>
+
+        <aside class="body-map-panel" id="bodyMapPanel" aria-live="polite">
+          <p class="eyebrow">Selected area</p>
+          <h2 id="bodyMapTitle">下腹區</h2>
+          <p id="bodyMapDescription">點擊左側身體地圖查看對應花精。</p>
+          <div id="bodyMapRemedies" class="body-remedy-list"></div>
+        </aside>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

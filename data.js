@@ -46,6 +46,57 @@ const syncStoreName = "fileHandles";
 const syncHandleKey = "mainJson";
 let syncWriteTimer = null;
 
+const bodyMapRegions = [
+  {
+    id: "neck",
+    label: "頸部",
+    description: "第七節頸椎附近。適合放入和頸部、肩頸連結相關的皮膚反應區。",
+    flowers: []
+  },
+  {
+    id: "upper-chest",
+    label: "上胸背部",
+    description: "肩線到胸口上方的區域。之後可補入對應花精與定位方式。",
+    flowers: []
+  },
+  {
+    id: "middle-chest",
+    label: "胸背中段",
+    description: "胸口、肋骨中段附近。之後可補入對應花精與定位方式。",
+    flowers: []
+  },
+  {
+    id: "upper-abdomen",
+    label: "上腹區",
+    description: "肋骨下方到肚臍上方。之後可補入對應花精與定位方式。",
+    flowers: []
+  },
+  {
+    id: "lower-abdomen",
+    label: "下腹區",
+    description: "截圖資料提到 Agrimony / 龍芽草位於下腹。此區先作為已知範例。",
+    flowers: ["龍芽草"]
+  },
+  {
+    id: "pelvis",
+    label: "骨盆區",
+    description: "骨盆與鼠蹊周圍。之後可補入對應花精與定位方式。",
+    flowers: []
+  },
+  {
+    id: "left-side",
+    label: "左側身體",
+    description: "以觀看者自身角度判斷左側。之後可補入左側相關花精。",
+    flowers: []
+  },
+  {
+    id: "right-side",
+    label: "右側身體",
+    description: "以觀看者自身角度判斷右側。之後可補入右側相關花精。",
+    flowers: []
+  }
+];
+
 function escapeHTML(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -92,6 +143,7 @@ function renderNav(activeFile) {
     ["categories.html", "七大分類"],
     ["rescue.html", "急救花精"],
     ["flowers.html", "38 朵花精"],
+    ["body-map.html", "身體地圖"],
     ["decision.html", "判斷流程"],
     ["records.html", "自我紀錄"],
     ["comparison.html", "容易混淆"],
@@ -555,6 +607,66 @@ function initFlowersPage() {
     window.location.href = "巴赫花精整理筆記.html";
   });
   render();
+}
+
+function initBodyMapPage() {
+  renderNav("body-map.html");
+  const regionButtons = document.querySelectorAll("[data-region]");
+  const title = document.querySelector("#bodyMapTitle");
+  const description = document.querySelector("#bodyMapDescription");
+  const remedyList = document.querySelector("#bodyMapRemedies");
+
+  function render(regionId) {
+    const region = bodyMapRegions.find((item) => item.id === regionId) || bodyMapRegions[0];
+    regionButtons.forEach((button) => {
+      button.classList.toggle("active", button.dataset.region === region.id);
+      button.setAttribute("aria-pressed", button.dataset.region === region.id ? "true" : "false");
+    });
+
+    title.textContent = region.label;
+    description.textContent = region.description;
+
+    if (region.flowers.length === 0) {
+      remedyList.innerHTML = '<p class="empty-state">這個區域的對應花精尚未補入。之後提供更多身體地圖資料時，可以直接加進這裡。</p>';
+      return;
+    }
+
+    remedyList.innerHTML = region.flowers.map((flowerName) => {
+      const flower = findFlower(flowerName);
+      if (!flower) return "";
+      return `
+        <article class="body-remedy-card">
+          <img class="flower-image" src="${escapeHTML(flower.image)}" alt="${escapeHTML(flower.imageAlt)}" loading="lazy">
+          <div>
+            <h3>${escapeHTML(flower.name)} <span class="english">${escapeHTML(flower.english)}</span></h3>
+            <span class="tag">${escapeHTML(flower.category)}</span>
+            <p><strong>負面特質：</strong>${escapeHTML(flower.negative)}</p>
+            <p><strong>正面方向：</strong>${escapeHTML(flower.positive)}</p>
+            <p><button class="small-button" type="button" data-add-focus="${escapeHTML(flower.name)}">加入首頁重點</button></p>
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
+
+  document.querySelector("#bodyMapPanel").addEventListener("click", (event) => {
+    const addButton = event.target.closest("[data-add-focus]");
+    if (!addButton) return;
+    addFocusItem(addButton.dataset.addFocus);
+    addButton.textContent = "已加入重點";
+    addButton.disabled = true;
+  });
+
+  regionButtons.forEach((button) => {
+    button.addEventListener("click", () => render(button.dataset.region));
+    button.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      render(button.dataset.region);
+    });
+  });
+
+  render("lower-abdomen");
 }
 
 function initRecordsPage() {

@@ -628,6 +628,111 @@ textarea {
   margin: 2px 0 0;
 }
 
+.body-map-layout {
+  display: grid;
+  grid-template-columns: minmax(340px, 0.95fr) minmax(360px, 1.05fr);
+  gap: clamp(28px, 5vw, 72px);
+  align-items: start;
+}
+
+.body-map-stage {
+  display: grid;
+  gap: 18px;
+}
+
+.body-map-svg {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  background: #fbfaf5;
+}
+
+.body-outline,
+.body-line {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.body-line {
+  opacity: 0.38;
+}
+
+.body-zone {
+  cursor: pointer;
+  outline: none;
+}
+
+.body-zone rect,
+.body-zone polygon {
+  fill: rgba(32, 32, 30, 0.04);
+  stroke: var(--ink);
+  stroke-width: 1.6;
+  transition: fill 140ms ease, stroke-width 140ms ease;
+}
+
+.body-zone text {
+  fill: var(--ink);
+  font-size: 14px;
+  font-weight: 800;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.body-zone:hover rect,
+.body-zone:hover polygon,
+.body-zone.active rect,
+.body-zone.active polygon {
+  fill: rgba(32, 32, 30, 0.16);
+  stroke-width: 2.4;
+}
+
+.body-zone.active text {
+  font-weight: 900;
+}
+
+.body-region-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.body-region-list .small-button.active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.body-map-panel {
+  position: sticky;
+  top: 170px;
+  min-width: 0;
+}
+
+.body-remedy-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.body-remedy-card {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+
+.body-remedy-card .flower-image {
+  margin-bottom: 0;
+}
+
+.body-remedy-card h3 {
+  margin-top: 0;
+}
+
 .empty-state {
   padding: 14px;
   border: 1px solid var(--line);
@@ -739,6 +844,14 @@ footer {
   .home-focus-results .focus-list {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+
+  .body-map-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .body-map-panel {
+    position: static;
+  }
 }
 
 @media (max-width: 880px) {
@@ -753,6 +866,10 @@ footer {
 
   .home-focus-results .focus-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .body-region-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -802,6 +919,11 @@ footer {
 
   .focus-list,
   .home-focus-results .focus-list {
+    grid-template-columns: 1fr;
+  }
+
+  .body-region-list,
+  .body-remedy-card {
     grid-template-columns: 1fr;
   }
 
