@@ -399,7 +399,7 @@ section,
 
 .home-visual {
   position: relative;
-  min-height: clamp(480px, 64vw, 760px);
+  min-height: clamp(360px, 46vw, 560px);
   overflow: hidden;
   border: 0;
   border-bottom: 1px solid var(--line);
@@ -412,8 +412,8 @@ section,
   inset: 0;
   z-index: 1;
   background:
-    linear-gradient(180deg, rgba(22, 30, 20, 0.12), rgba(22, 30, 20, 0.42)),
-    linear-gradient(90deg, rgba(22, 30, 20, 0.2), rgba(22, 30, 20, 0.02) 58%, rgba(22, 30, 20, 0.12));
+    linear-gradient(180deg, rgba(22, 30, 20, 0.1), rgba(22, 30, 20, 0.34)),
+    linear-gradient(90deg, rgba(22, 30, 20, 0.46), rgba(22, 30, 20, 0.08) 58%, rgba(22, 30, 20, 0.12));
 }
 
 .home-visual-image {
@@ -429,21 +429,52 @@ section,
   z-index: 2;
   display: grid;
   align-content: center;
-  justify-items: center;
+  justify-items: start;
+  gap: 24px;
   min-height: inherit;
-  max-width: none;
+  max-width: 760px;
   padding: clamp(28px, 5vw, 64px);
 }
 
+.home-visual-copy {
+  max-width: 620px;
+  padding: clamp(20px, 3vw, 34px);
+  border: 1px solid rgba(255, 253, 245, 0.38);
+  background: rgba(248, 247, 242, 0.14);
+  backdrop-filter: blur(3px);
+}
+
+.home-visual-copy .eyebrow,
+.home-visual-copy p,
+.home-visual-copy h1 {
+  color: #fffdf5;
+}
+
+.home-visual-copy .eyebrow {
+  margin-bottom: 14px;
+}
+
+.home-visual-copy h1 {
+  max-width: 560px;
+  font-size: clamp(34px, 5vw, 62px);
+  line-height: 1.08;
+}
+
+.home-visual-copy p:last-child {
+  max-width: 460px;
+  margin: 16px 0 0;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
 .home-visual-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, max-content));
   gap: 14px;
 }
 
 .home-visual-actions .button {
-  min-width: 168px;
+  min-width: 176px;
   border-color: rgba(255, 253, 245, 0.88);
   border-radius: 999px;
   background: rgba(255, 253, 245, 0.92);
@@ -1293,15 +1324,29 @@ footer {
   }
 
   .home-visual {
-    min-height: 520px;
+    min-height: 500px;
+  }
+
+  .home-visual-content {
+    justify-items: stretch;
+    padding: 28px 20px;
+  }
+
+  .home-visual-copy {
+    padding: 18px;
+  }
+
+  .home-visual-copy h1 {
+    font-size: 34px;
   }
 
   .home-visual-actions {
+    grid-template-columns: 1fr;
     width: 100%;
   }
 
   .home-visual-actions .button {
-    width: min(100%, 240px);
+    width: 100%;
   }
 
   .app-topbar {
