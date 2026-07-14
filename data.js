@@ -159,6 +159,10 @@ function renderNav(activeFile) {
         <div class="desktop-nav">
           ${navGroups.map((group) => {
             const groupActive = group.links.some(([href]) => href === activeFile);
+            if (group.links.length === 1) {
+              const [href, label] = group.links[0];
+              return `<a class="nav-direct-link ${href === activeFile ? "active" : ""}" href="${href}">${group.label}</a>`;
+            }
             return `
               <details class="nav-group" ${groupActive ? "open" : ""}>
                 <summary class="${groupActive ? "active" : ""}">${group.label}</summary>
@@ -188,6 +192,9 @@ function renderNav(activeFile) {
       document.body.classList.remove("drawer-open", "settings-open");
     });
   } else {
+    document.querySelectorAll(".nav-direct-link").forEach((link) => {
+      link.classList.toggle("active", link.getAttribute("href") === activeFile);
+    });
     document.querySelectorAll(".nav-group").forEach((group) => {
       const isActiveGroup = Array.from(group.querySelectorAll("a")).some((link) => link.getAttribute("href") === activeFile);
       group.open = isActiveGroup;

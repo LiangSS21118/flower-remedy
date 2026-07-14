@@ -77,7 +77,8 @@ body {
   position: relative;
 }
 
-.nav-group summary {
+.nav-group summary,
+.nav-direct-link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -88,6 +89,22 @@ body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.nav-direct-link {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.nav-direct-link:hover {
+  text-decoration: none;
+}
+
+.nav-direct-link.active {
+  border-bottom: 1px solid var(--ink);
+}
+
+.nav-group summary {
   cursor: pointer;
   list-style: none;
 }
