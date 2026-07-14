@@ -139,7 +139,7 @@ function renderNav(activeFile) {
 
   const navGroups = [
     { label: "總覽", links: [["巴赫花精整理筆記.html", "首頁總覽"]] },
-    { label: "分類系統", links: [["categories.html", "分類入口"]] },
+    { label: "分類系統", links: [["category-beginner.html", "入門"], ["category-advanced.html", "進階"]] },
     { label: "花精大全", links: [["flowers.html", "總表查詢"], ["comparison.html", "容易混淆"]] },
     { label: "個人", links: [["decision.html", "判斷"], ["records.html", "紀錄"]] }
   ];
