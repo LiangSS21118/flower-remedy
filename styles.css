@@ -591,6 +591,37 @@ section,
   margin-top: 0;
 }
 
+.info-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.info-card-grid article {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.info-card-grid h3 {
+  margin-top: 0;
+}
+
+.info-card-grid p {
+  color: var(--muted);
+}
+
+.role-card-grid article {
+  min-height: 170px;
+}
+
+.note-text {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .category-level-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1292,6 +1323,7 @@ footer {
   .overview-grid,
   .system-grid,
   .placeholder-grid,
+  .info-card-grid,
   .category-level-grid,
   .category-method-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1324,6 +1356,7 @@ footer {
 
 @media (max-width: 880px) {
   .cards,
+  .info-card-grid,
   .record-list {
     grid-template-columns: 1fr;
   }
@@ -1445,6 +1478,7 @@ footer {
   .overview-grid,
   .system-grid,
   .placeholder-grid,
+  .info-card-grid,
   .category-level-grid,
   .category-method-grid,
   .path-list li {
