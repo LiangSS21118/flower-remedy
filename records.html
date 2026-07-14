@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>巴赫花精整理筆記｜自我紀錄</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="data.js" defer></script>
+  <script defer>document.addEventListener("DOMContentLoaded", () => initRecordsPage());</script>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">自我紀錄</p>
+      <h1>自我紀錄區</h1>
+      <p>狀態、花精、觀察。</p>
+    </div>
+  </header>
+  <main class="page">
+    <nav class="nav" data-nav aria-label="筆記頁面"></nav>
+    <section class="split-page">
+      <div class="split-primary">
+        <h2>Self records</h2>
+        <form id="recordForm" class="record-form">
+          <div class="field">
+            <label for="recordDate">日期</label>
+            <input id="recordDate" type="date" required>
+          </div>
+          <div class="field">
+            <label for="recordFlower">花精</label>
+            <select id="recordFlower" required>
+              <option value="">請選擇花精</option>
+            </select>
+          </div>
+          <div class="field span-2">
+            <label for="recordState">目前狀態</label>
+            <textarea id="recordState" placeholder="例如：最近一直擔心家人、腦中停不下來、覺得自己快撐不住。" required></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="recordReason">選擇原因</label>
+            <textarea id="recordReason" placeholder="寫下對照到哪個負面特質，或哪個正面方向是你現在需要的。"></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="recordObservation">觀察</label>
+            <textarea id="recordObservation" placeholder="之後回來補：情緒是否變化？還是其實更像另一朵花？"></textarea>
+          </div>
+          <div class="record-actions span-2">
+            <button class="button" type="submit">新增紀錄</button>
+            <button class="small-button" type="button" id="clearRecordForm">清空表單</button>
+          </div>
+        </form>
+      </div>
+      <div class="split-secondary">
+        <div id="recordList" class="record-list" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

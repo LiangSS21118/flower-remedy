@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>巴赫花精整理筆記｜首頁重點</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="data.js" defer></script>
+  <script defer>document.addEventListener("DOMContentLoaded", () => initHomePage());</script>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">首頁重點</p>
+      <h1>巴赫花精整理筆記</h1>
+      <p>近期重點花精。</p>
+    </div>
+  </header>
+
+  <main class="page">
+    <nav class="nav" data-nav aria-label="筆記頁面"></nav>
+
+    <section class="home-focus-section">
+      <div class="home-focus-tools">
+        <h2>Focus remedies</h2>
+        <form id="focusForm" class="record-form">
+          <div class="field">
+            <label for="focusFlower">花精</label>
+            <select id="focusFlower" required>
+              <option value="">請選擇花精</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="focusReason">自身情況</label>
+            <input id="focusReason" type="text" placeholder="例如：最近腦中一直反覆想同一件事">
+          </div>
+          <div class="record-actions span-2">
+            <button class="button" type="submit">加入重點</button>
+          </div>
+        </form>
+      </div>
+      <div class="home-focus-results">
+        <div id="focusList" class="focus-list" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>同步設定在右上角。</p>
+  </footer>
+</body>
+</html>

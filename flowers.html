@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>巴赫花精整理筆記｜38 朵花精</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="data.js" defer></script>
+  <script defer>document.addEventListener("DOMContentLoaded", () => initFlowersPage());</script>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">查找表</p>
+      <h1>38 朵花精總表</h1>
+      <p>搜尋、篩選、加入首頁重點。</p>
+    </div>
+  </header>
+  <main class="page">
+    <nav class="nav" data-nav aria-label="筆記頁面"></nav>
+    <section>
+      <h2>Remedies list</h2>
+      <div class="toolbox" aria-label="花精搜尋工具">
+        <input id="searchInput" type="search" placeholder="搜尋花精、English、負面特質或正面方向">
+        <select id="categoryFilter">
+          <option value="">全部分類</option>
+          <option>恐懼</option>
+          <option>不確定</option>
+          <option>對現況不感興趣</option>
+          <option>孤單</option>
+          <option>易受外界影響</option>
+          <option>沮喪、絕望</option>
+          <option>過度牽掛別人的安康</option>
+        </select>
+      </div>
+      <p id="resultCount" class="count">共 38 朵花精</p>
+      <div id="flowerCards" class="cards"></div>
+    </section>
+  </main>
+</body>
+</html>
