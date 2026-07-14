@@ -676,16 +676,22 @@ body.home-page .home-focus-tools {
   background: var(--soft);
 }
 
-.home-sort-note span {
+.home-sort-note label {
   color: var(--muted);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.04em;
 }
 
-.home-sort-note strong {
-  font-size: 15px;
-  line-height: 1.4;
+.home-sort-note select {
+  min-height: 42px;
+  padding: 8px 36px 8px 12px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
 }
 
 .home-focus-tools .record-form {

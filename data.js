@@ -225,11 +225,19 @@ function renderFocusList() {
   const focusList = document.querySelector("#focusList");
   if (!focusList) return;
 
+  const sortMode = document.querySelector("#focusSort")?.value || "match-desc";
   const items = readList(focusStorageKey).slice();
-  items.sort((a, b) => (
-    Number(b.match || 0) - Number(a.match || 0)
-    || Number(b.createdAt || b.id || 0) - Number(a.createdAt || a.id || 0)
-  ));
+  items.sort((a, b) => {
+    if (sortMode === "match-asc") {
+      return Number(a.match || 0) - Number(b.match || 0)
+        || Number(b.createdAt || b.id || 0) - Number(a.createdAt || a.id || 0);
+    }
+    if (sortMode === "newest") {
+      return Number(b.createdAt || b.id || 0) - Number(a.createdAt || a.id || 0);
+    }
+    return Number(b.match || 0) - Number(a.match || 0)
+      || Number(b.createdAt || b.id || 0) - Number(a.createdAt || a.id || 0);
+  });
   if (items.length === 0) {
     focusList.innerHTML = '<p class="empty-state">尚未收藏花精。</p>';
     return;
@@ -473,8 +481,10 @@ function initHomePage() {
   const select = document.querySelector("#focusFlower");
   const reason = document.querySelector("#focusReason");
   const list = document.querySelector("#focusList");
+  const sort = document.querySelector("#focusSort");
 
   if (select) select.insertAdjacentHTML("beforeend", flowerOptions());
+  if (sort) sort.addEventListener("change", renderFocusList);
   if (form) {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
