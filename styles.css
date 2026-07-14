@@ -241,6 +241,11 @@ h1 {
   overflow-wrap: anywhere;
 }
 
+.single-line-title {
+  max-width: none;
+  white-space: nowrap;
+}
+
 .hero p {
   max-width: 520px;
   margin: 18px 0 0;
@@ -1454,6 +1459,10 @@ footer {
 
   h1 {
     font-size: clamp(38px, 13vw, 58px);
+  }
+
+  .single-line-title {
+    white-space: normal;
   }
 
   .hero p {
