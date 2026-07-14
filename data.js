@@ -137,20 +137,14 @@ function renderNav(activeFile) {
   const nav = document.querySelector("[data-nav]");
   if (!nav) return;
 
-  const links = [
-    ["巴赫花精整理筆記.html", "總覽"],
-    ["core.html", "核心觀念"],
-    ["categories.html", "分類系統"],
-    ["rescue.html", "急救花精"],
-    ["flowers.html", "38 朵花精"],
-    ["body-map.html", "身體地圖"],
-    ["tracks.html", "花精軌道"],
-    ["decision.html", "判斷流程"],
-    ["records.html", "自我紀錄"],
-    ["comparison.html", "容易混淆"],
-    ["review.html", "複習建議"]
+  const navGroups = [
+    { label: "總覽", links: [["巴赫花精整理筆記.html", "首頁總覽"]] },
+    { label: "入門", links: [["core.html", "核心觀念"], ["categories.html", "分類系統"], ["rescue.html", "急救花精"]] },
+    { label: "查詢", links: [["flowers.html", "38 朵花精"], ["decision.html", "判斷流程"], ["comparison.html", "容易混淆"]] },
+    { label: "進階", links: [["body-map.html", "身體地圖"], ["tracks.html", "花精軌道"]] },
+    { label: "個人", links: [["records.html", "自我紀錄"], ["review.html", "複習建議"]] }
   ];
-
+  const links = navGroups.flatMap((group) => group.links);
   const activeLabel = links.find(([href]) => href === activeFile)?.[1] || "筆記";
 
   if (!document.querySelector(".app-topbar")) {
@@ -163,9 +157,19 @@ function renderNav(activeFile) {
         </a>
         <button class="icon-button" type="button" id="openSettings">設定</button>
         <div class="desktop-nav">
-          ${links.map(([href, label]) => (
-            `<a class="${href === activeFile ? "active" : ""}" href="${href}">${label}</a>`
-          )).join("")}
+          ${navGroups.map((group) => {
+            const groupActive = group.links.some(([href]) => href === activeFile);
+            return `
+              <details class="nav-group" ${groupActive ? "open" : ""}>
+                <summary class="${groupActive ? "active" : ""}">${group.label}</summary>
+                <div class="nav-menu">
+                  ${group.links.map(([href, label]) => (
+                    `<a class="${href === activeFile ? "active" : ""}" href="${href}">${label}</a>`
+                  )).join("")}
+                </div>
+              </details>
+            `;
+          }).join("")}
         </div>
       </header>
       <div class="drawer-backdrop" id="drawerBackdrop"></div>
@@ -184,18 +188,28 @@ function renderNav(activeFile) {
       document.body.classList.remove("drawer-open", "settings-open");
     });
   } else {
-    document.querySelectorAll(".desktop-nav a").forEach((link) => {
-      link.classList.toggle("active", link.getAttribute("href") === activeFile);
+    document.querySelectorAll(".nav-group").forEach((group) => {
+      const isActiveGroup = Array.from(group.querySelectorAll("a")).some((link) => link.getAttribute("href") === activeFile);
+      group.open = isActiveGroup;
+      group.querySelector("summary").classList.toggle("active", isActiveGroup);
+      group.querySelectorAll("a").forEach((link) => {
+        link.classList.toggle("active", link.getAttribute("href") === activeFile);
+      });
     });
   }
 
   nav.innerHTML = `
     <p class="nav-title">筆記分頁</p>
-    <div class="nav-links">
-      ${links.map(([href, label]) => (
-        `<a class="${href === activeFile ? "active" : ""}" href="${href}">${label}</a>`
-      )).join("")}
-    </div>
+    ${navGroups.map((group) => `
+      <div class="drawer-nav-group">
+        <p>${group.label}</p>
+        <div class="nav-links">
+          ${group.links.map(([href, label]) => (
+            `<a class="${href === activeFile ? "active" : ""}" href="${href}">${label}</a>`
+          )).join("")}
+        </div>
+      </div>
+    `).join("")}
   `;
 
   renderSyncPanel();
