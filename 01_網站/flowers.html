@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>新巴赫花精大全｜花精總表</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="body-map-data.js" defer></script>
+  <script src="data.js" defer></script>
+  <script defer>document.addEventListener("DOMContentLoaded", () => initFlowersPage());</script>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">花精大全</p>
+      <h1>38 朵花精總表</h1>
+      <p>先用簡短摘要快速瀏覽，點開詳情再查看分類、軌道、身體反應區與觀察重點。</p>
+    </div>
+  </header>
+  <main class="page">
+    <nav class="nav" data-nav aria-label="筆記頁面"></nav>
+    <section>
+      <h2 class="tool-icon-heading" aria-label="搜尋花精">⌕</h2>
+      <div class="toolbox" aria-label="花精搜尋工具">
+        <input id="searchInput" type="search" placeholder="搜尋花精、英文名、負面特質或正面方向">
+        <select id="categoryFilter">
+          <option value="">全部入門分類</option>
+          <option>恐懼</option>
+          <option>不確定</option>
+          <option>對現況不感興趣</option>
+          <option>孤單</option>
+          <option>易受外界影響</option>
+          <option>沮喪、絕望</option>
+          <option>過度牽掛別人的安康</option>
+        </select>
+      </div>
+      <p id="resultCount" class="count">共 38 朵花精</p>
+      <div id="flowerCards" class="cards"></div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="focusDialog" hidden>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="focusDialogTitle">
+      <div class="settings-header">
+        <h2 id="focusDialogTitle">加入個人紀錄</h2>
+        <button class="small-button" type="button" id="closeFocusDialog">關閉</button>
+      </div>
+      <form id="focusDialogForm" class="record-form compact-form">
+        <input id="focusDialogFlower" type="hidden">
+        <div class="field span-2">
+          <label for="focusDialogNote">備註</label>
+          <textarea id="focusDialogNote" placeholder="寫下為什麼覺得這朵花符合自己，例如目前狀態、觸發情境或想觀察的方向。"></textarea>
+        </div>
+        <div class="field span-2">
+          <label for="focusDialogMatch">自身符合程度：<span id="focusDialogMatchValue">3</span> / 5</label>
+          <input id="focusDialogMatch" type="range" min="1" max="5" value="3">
+        </div>
+        <div class="record-actions span-2">
+          <button class="button" type="submit">儲存到個人紀錄</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="flowerDetailDialog" hidden>
+    <div class="modal-panel wide-modal-panel" role="dialog" aria-modal="true" aria-labelledby="flowerDetailTitle">
+      <div class="settings-header">
+        <h2 id="flowerDetailTitle">花精詳情</h2>
+        <button class="small-button" type="button" id="closeFlowerDetailDialog">關閉</button>
+      </div>
+      <div id="flowerDetailContent"></div>
+    </div>
+  </div>
+</body>
+</html>

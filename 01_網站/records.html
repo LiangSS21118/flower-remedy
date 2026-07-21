@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>新巴赫花精大全｜個人紀錄</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="data.js" defer></script>
+  <script defer>document.addEventListener("DOMContentLoaded", () => initRecordsPage());</script>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">個人</p>
+      <h1>個人紀錄</h1>
+      <p>收藏花精、備註、匹配程度與後續觀察。</p>
+    </div>
+  </header>
+  <main class="page">
+    <nav class="nav" data-nav aria-label="筆記頁面"></nav>
+    <section class="home-focus-section">
+      <div class="home-focus-tools">
+        <div>
+          <p class="eyebrow">收藏花精</p>
+          <h2>收藏花精</h2>
+          <p>從花精總表或判斷流程加入的重點花精會出現在這裡，系統會依自身符合程度 1-5 自動排序。</p>
+        </div>
+      </div>
+      <div class="home-focus-results">
+        <div id="focusList" class="focus-list" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="split-page">
+      <div class="split-primary">
+        <h2>觀察紀錄</h2>
+        <form id="recordForm" class="record-form">
+          <div class="field">
+            <label for="recordDate">日期</label>
+            <input id="recordDate" type="date" required>
+          </div>
+          <div class="field">
+            <label for="recordFlower">花精</label>
+            <select id="recordFlower" required>
+              <option value="">請選擇花精</option>
+            </select>
+          </div>
+          <div class="field span-2">
+            <label for="recordState">目前狀態</label>
+            <textarea id="recordState" placeholder="例如：最近一直擔心家人、腦中停不下來、覺得自己快撐不住。" required></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="recordReason">選擇原因</label>
+            <textarea id="recordReason" placeholder="寫下對照到哪個負面特質，或哪個正面方向是你現在需要的。"></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="recordObservation">觀察</label>
+            <textarea id="recordObservation" placeholder="之後回來補：情緒是否變化？還是其實更像另一朵花？"></textarea>
+          </div>
+          <div class="record-actions span-2">
+            <button class="button" type="submit">新增紀錄</button>
+            <button class="small-button" type="button" id="clearRecordForm">清空表單</button>
+          </div>
+        </form>
+      </div>
+      <div class="split-secondary">
+        <div id="recordList" class="record-list" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

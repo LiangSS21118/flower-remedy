@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>新巴赫花精大全｜總覽</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="data.js" defer></script>
+  <script defer>document.addEventListener("DOMContentLoaded", () => initHomePage());</script>
+</head>
+<body class="home-page">
+  <main class="page">
+    <nav class="nav" data-nav aria-label="筆記頁面"></nav>
+
+    <section class="home-overview-section">
+      <div class="home-visual">
+        <img class="home-visual-image" src="background.png" alt="新巴赫花精大全首頁主視覺" loading="eager">
+        <div class="home-visual-content">
+          <div class="home-visual-copy">
+            <p class="eyebrow">花精大全</p>
+            <h1>看見情緒狀態，找到對應花精</h1>
+            <p>從目前感受開始判斷，或直接查詢 38 種花精重點。</p>
+          </div>
+          <div class="home-visual-actions">
+            <a class="button" href="decision.html">判斷目前狀況</a>
+            <a class="button secondary-button" href="flowers.html">查詢花精</a>
+            <a class="button secondary-button" href="body-map.html">身體反應區</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <p class="eyebrow">判斷入口</p>
+        <h2>兩條路徑都能回到花精選擇</h2>
+      </div>
+      <div class="category-method-grid">
+        <a class="method-card" href="assessment.html">
+          <h3>從人出發</h3>
+          <p>先整理情緒、人格模式與軌道分層，再接到評估表、診斷、配置與紀錄。</p>
+        </a>
+        <a class="method-card" href="body-map.html">
+          <h3>從身體反應出發</h3>
+          <p>先查身體反應區與疼痛位置，再回推可能的情緒原因與對應花精。</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="home-focus-section" id="focusFlowers">
+      <div class="home-focus-tools">
+        <div>
+          <p class="eyebrow">個人紀錄</p>
+          <h2>重點花精</h2>
+          <p>這裡顯示「個人紀錄」中收藏的花精摘要。要新增或管理備註與匹配程度，請到花精總表或個人紀錄頁。</p>
+        </div>
+        <div class="home-sort-note" aria-label="重點花精排序條件">
+          <label for="focusSort">排序條件</label>
+          <select id="focusSort">
+            <option value="match-desc">符合自身程度高到低</option>
+            <option value="match-asc">符合自身程度低到高</option>
+            <option value="newest">最新加入</option>
+          </select>
+        </div>
+      </div>
+      <div class="home-focus-results">
+        <div id="focusList" class="focus-list" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>同步設定在右上角。</p>
+  </footer>
+</body>
+</html>
