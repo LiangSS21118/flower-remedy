@@ -2034,7 +2034,8 @@ function initBodyMapPage() {
       if (effectiveGender() === "male") return overviewByAny(isBack ? ["男下生殖器", "生殖器（男）"] : ["生殖器（男）", "男下生殖器"]);
       return overviewByAny(["女生殖器", "生殖器"]);
     }
-    if (label.includes("臉")) return overviewByTitle("正臉");
+    if (isBack && hasAny(label, ["頭", "後腦", "後頭", "後頸"])) return overviewByTitle("後腦");
+    if (!isBack && label.includes("臉")) return overviewByTitle("正臉");
     if (isTopHeadLabel(label)) return overviewByTitle("頭頂") || overviewByTitle("頭部");
     if (label.includes("頭")) return overviewByTitle(isBack || label.includes("後") ? "後腦" : "頭部");
     if (label.includes("後頸")) return overviewByTitle("後腦");
@@ -2721,16 +2722,28 @@ function initBodyMapPage() {
     return [];
   }
 
+  function entriesMatchingExplicitPointTarget(point, flowerEntries) {
+    const targetTitle = String(point.title || point.entryTitle || point.part || "").trim();
+    const targetPath = String(point.path || point.entryPath || "").trim();
+    if (!targetTitle && !targetPath) return [];
+    return flowerEntries.filter((entry) => {
+      const titleMatches = targetTitle && entry.title === targetTitle;
+      const pathMatches = targetPath && entry.path === targetPath;
+      return titleMatches || pathMatches;
+    });
+  }
+
   function detailPointFromNumber(overview, point, index) {
     const alignedPoint = point.coordinateSpace === "official" ? point : alignDetectedPointToDetailImage(overview, point);
     const adjustedPoint = edgeArrowAdjustedPoint(alignedPoint);
     const flowerEntriesForNumber = entries.filter((entry) => String(entry.flowerNo) === String(point.number));
+    const explicitEntries = entriesMatchingExplicitPointTarget(point, flowerEntriesForNumber);
     const overviewMatchedEntries = flowerEntriesForNumber.filter((entry) => overviewMatchesEntry(overview, entry));
     const proximityEntries = closestEntriesForDetailView(overview, flowerEntriesForNumber);
     const closestEntries = overview.title === "頭頂" && proximityEntries.length
       ? Array.from(new Map([...overviewMatchedEntries, ...proximityEntries].map((entry) => [entry.id, entry])).values())
       : (overviewMatchedEntries.length ? overviewMatchedEntries : proximityEntries);
-    const candidateEntries = closestEntries.length ? closestEntries : flowerEntriesForNumber.slice(0, 1);
+    const candidateEntries = explicitEntries.length ? explicitEntries : (closestEntries.length ? closestEntries : flowerEntriesForNumber.slice(0, 1));
     const headTopPreferredEntries = preferredHeadTopEntriesForPoint(overview, adjustedPoint, candidateEntries);
     const pointEntries = disambiguateEntriesForPoint(
       overview,

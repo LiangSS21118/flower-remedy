@@ -684,10 +684,17 @@ const BODY_REACTION_DATA = {
           "side": "back"
         },
         {
-          "title": "男、女性生殖器",
-          "path": "花精身體反應區/10 酸蘋果/男、女性生殖器.png",
+          "title": "女性生殖器",
+          "path": "花精身體反應區/10 酸蘋果/女性生殖器.png",
           "isGenital": true,
-          "gender": "all",
+          "gender": "female",
+          "side": "front"
+        },
+        {
+          "title": "男性生殖器",
+          "path": "花精身體反應區/10 酸蘋果/男性生殖器.png",
+          "isGenital": true,
+          "gender": "male",
           "side": "front"
         },
         {
@@ -929,11 +936,18 @@ const BODY_REACTION_DATA = {
           "side": "unknown"
         },
         {
-          "title": "左手背、右手掌",
-          "path": "花精身體反應區/15 冬青/左手背、右手掌.png",
+          "title": "右手心",
+          "path": "花精身體反應區/15 冬青/右手心.png",
           "isGenital": false,
           "gender": "all",
           "side": "front"
+        },
+        {
+          "title": "左手背",
+          "path": "花精身體反應區/15 冬青/左手背.png",
+          "isGenital": false,
+          "gender": "all",
+          "side": "back"
         },
         {
           "title": "左側身",
@@ -1076,11 +1090,18 @@ const BODY_REACTION_DATA = {
       "folder": "花精身體反應區/19 落葉松",
       "items": [
         {
-          "title": "右手背、龜頭後半部置上緣",
-          "path": "花精身體反應區/19 落葉松/右手背、龜頭後半部置上緣.png",
+          "title": "右手背",
+          "path": "花精身體反應區/19 落葉松/右手背.png",
+          "isGenital": false,
+          "gender": "all",
+          "side": "back"
+        },
+        {
+          "title": "龜頭後半部置上緣",
+          "path": "花精身體反應區/19 落葉松/龜頭後半部置上緣.png",
           "isGenital": true,
           "gender": "male",
-          "side": "back"
+          "side": "front"
         },
         {
           "title": "右前臂",
@@ -1118,8 +1139,15 @@ const BODY_REACTION_DATA = {
           "side": "back"
         },
         {
-          "title": "右腳掌、男性生殖器",
-          "path": "花精身體反應區/20 溝酸漿/右腳掌、男性生殖器.png",
+          "title": "右腳掌",
+          "path": "花精身體反應區/20 溝酸漿/右腳掌.png",
+          "isGenital": false,
+          "gender": "all",
+          "side": "back"
+        },
+        {
+          "title": "男性生殖器",
+          "path": "花精身體反應區/20 溝酸漿/男性生殖器.png",
           "isGenital": true,
           "gender": "male",
           "side": "front"
@@ -1230,10 +1258,17 @@ const BODY_REACTION_DATA = {
           "side": "front"
         },
         {
-          "title": "生殖器",
-          "path": "花精身體反應區/22 橡樹/生殖器.png",
+          "title": "女生生殖器",
+          "path": "花精身體反應區/22 橡樹/女生生殖器.png",
           "isGenital": true,
-          "gender": "all",
+          "gender": "female",
+          "side": "front"
+        },
+        {
+          "title": "男生生殖器",
+          "path": "花精身體反應區/22 橡樹/男生生殖器.png",
+          "isGenital": true,
+          "gender": "male",
           "side": "front"
         },
         {
