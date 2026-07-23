@@ -301,16 +301,29 @@ body.home-page .home-focus-section {
   left: 0;
   z-index: 40;
   width: min(320px, 86vw);
-  padding: 70px 18px 22px;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  padding: 70px 18px calc(22px + env(safe-area-inset-bottom));
   border-right: 1px solid var(--line);
   background: var(--paper);
   box-shadow: var(--shadow);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   transform: translateX(-105%);
   transition: transform 180ms ease;
+  -webkit-overflow-scrolling: touch;
 }
 
 body.drawer-open .nav {
   transform: translateX(0);
+}
+
+body.drawer-open,
+body.settings-open,
+body.body-map-modal-open {
+  overflow: hidden;
 }
 
 .nav-title {
