@@ -12,4 +12,7 @@ video-ocr-tool/
 05_工具與暫存/_tmp_review/
 05_工具與暫存/video-ocr-tool/
 01_網站/_tmp*.png
+01_網站/_tmp*.json
 01_網站/_tmp_*/
+bach-flower-sync.json
+04_個人同步/*.json

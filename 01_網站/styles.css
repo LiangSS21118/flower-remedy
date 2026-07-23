@@ -971,6 +971,11 @@ textarea {
   width: min(860px, 100%);
 }
 
+.quick-focus-message {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
 .compact-form {
   grid-template-columns: 1fr;
   margin-bottom: 0;
@@ -1817,6 +1822,195 @@ textarea {
   border-top: 1px solid var(--line);
 }
 
+.body-map-section {
+  max-width: 980px;
+  margin-inline: auto;
+}
+
+.body-map-section .section-heading {
+  margin-bottom: 12px;
+}
+
+.body-map-section .reaction-map-app {
+  gap: 14px;
+}
+
+.body-map-section .reaction-toolbar {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.body-map-section .reaction-search-field {
+  max-width: 360px;
+}
+
+.body-map-section .reaction-stats {
+  display: none;
+}
+
+.body-map-section .reaction-map-layout {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  justify-items: center;
+}
+
+.body-map-section .body-map-stage {
+  width: 100%;
+}
+
+.body-map-section .body-toggle-row {
+  justify-content: center;
+}
+
+.body-map-section .body-figure {
+  justify-items: center;
+}
+
+.body-map-section .body-figure figcaption {
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.body-map-section .body-figure-canvas {
+  border-color: #d9d4ca;
+  background: transparent;
+}
+
+.body-map-section .reaction-preview-panel {
+  width: min(760px, 100%);
+  padding-left: 0;
+  border-left: 0;
+}
+
+.body-map-section .reaction-preview-panel h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.body-map-section .body-map-modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 46;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  width: min(520px, calc(100vw - 32px));
+  max-height: min(760px, calc(100vh - 96px));
+  padding: 22px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  box-shadow: 0 26px 70px rgba(30, 28, 24, 0.22);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -46%) scale(0.98);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.body-map-section .body-map-modal[hidden] {
+  display: none;
+}
+
+body.body-map-modal-open::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  background: rgba(32, 30, 26, 0.28);
+  pointer-events: none;
+}
+
+body.body-map-modal-open .body-map-section .body-map-modal {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.body-map-modal-header {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.body-map-modal-header h2 {
+  min-width: 0;
+}
+
+.body-map-modal-close {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.body-map-modal-close:hover,
+.body-map-modal-close:focus-visible {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.body-map-section #bodyMapDescription {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.body-map-section .reaction-result-list.compact {
+  min-height: 0;
+  max-height: none;
+  overflow: auto;
+}
+
+.body-map-section .reaction-row {
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.body-map-section .reaction-result-list.compact .reaction-thumb {
+  width: 72px;
+  height: 58px;
+}
+
+.body-map-section .reaction-row h3 {
+  font-size: 15px;
+}
+
+.body-map-section .reaction-row p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.body-map-more-reactions {
+  margin-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.body-map-more-reactions summary {
+  padding: 9px 0;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.body-map-more-reactions .reaction-result-list {
+  border-top: 0;
+}
+
 .skin-guideline-section {
   display: grid;
   gap: 26px;
@@ -2064,6 +2258,12 @@ footer {
 }
 
 @media (max-width: 880px) {
+  .body-map-section .body-map-modal {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 88px);
+    padding: 16px;
+  }
+
   .cards,
   .info-card-grid,
   .assessment-grid,

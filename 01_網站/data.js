@@ -576,6 +576,39 @@ function focusFlowerNames() {
   return new Set(readList(focusStorageKey).map((item) => item.flower));
 }
 
+function reactionHasAny(value, words) {
+  return words.some((word) => String(value || "").includes(word));
+}
+
+function inferredReactionSide(item = {}) {
+  if (item.side === "front" || item.side === "back") return item.side;
+  const text = `${item.group || ""} ${item.path || ""} ${item.title || ""}`;
+  if (reactionHasAny(text, ["背面", "後方", "後側", "後腦", "後背", "手背", "腳掌", "腳跟"])) return "back";
+  return "front";
+}
+
+function inferredReactionIsGenital(item = {}) {
+  if (typeof item.isGenital === "boolean") return item.isGenital;
+  return reactionHasAny(`${item.title || ""} ${item.path || ""}`, ["生殖器", "陰蒂", "陰唇", "陰莖", "龜頭", "前列腺"]);
+}
+
+function inferredReactionGender(item = {}) {
+  if (item.gender === "female" || item.gender === "male" || item.gender === "all") return item.gender;
+  const text = `${item.title || ""} ${item.path || ""}`;
+  if (reactionHasAny(text, ["女生殖器", "女性", "陰蒂", "陰唇"])) return "female";
+  if (reactionHasAny(text, ["男生殖器", "男下生殖器", "男性", "陰莖", "龜頭", "前列腺"])) return "male";
+  return "all";
+}
+
+function normalizeReactionItem(item = {}) {
+  return {
+    ...item,
+    isGenital: inferredReactionIsGenital(item),
+    gender: inferredReactionGender(item),
+    side: inferredReactionSide(item)
+  };
+}
+
 function flowerTrackRoles(flowerName) {
   return trackRows.flatMap((track) => (
     ["communication", "compensation", "decompensation"]
@@ -587,7 +620,7 @@ function flowerTrackRoles(flowerName) {
 function flowerReactionItems(flowerName) {
   if (typeof BODY_REACTION_DATA === "undefined") return [];
   const flower = BODY_REACTION_DATA.flowers.find((item) => item.name === flowerName);
-  return flower?.items || [];
+  return (flower?.items || []).map(normalizeReactionItem);
 }
 
 function compactReactionLabels(items) {
@@ -596,10 +629,103 @@ function compactReactionLabels(items) {
   return `${labels.slice(0, 6).join("、")} 等 ${labels.length} 區`;
 }
 
-function addFocusFromButton(button, source) {
+function ensureQuickFocusDialog() {
+  let dialog = document.querySelector("#quickFocusDialog");
+  if (!dialog) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal-backdrop quick-focus-dialog" id="quickFocusDialog" hidden>
+        <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="quickFocusTitle">
+          <div class="settings-header">
+            <div>
+              <p class="eyebrow" id="quickFocusEyebrow">個人重點</p>
+              <h2 id="quickFocusTitle">加入重點</h2>
+            </div>
+            <button class="body-map-modal-close" type="button" id="quickFocusClose" aria-label="關閉">×</button>
+          </div>
+          <p class="quick-focus-message" id="quickFocusMessage"></p>
+          <form id="quickFocusForm" class="record-form compact-form">
+            <div class="field span-2">
+              <label for="quickFocusNote">備註</label>
+              <textarea id="quickFocusNote" placeholder="寫下目前狀態、不舒服的位置、觸發情境或想觀察的方向。"></textarea>
+            </div>
+            <div class="field span-2">
+              <label for="quickFocusMatch">符合程度：<span id="quickFocusMatchValue">3</span> / 5</label>
+              <input id="quickFocusMatch" type="range" min="1" max="5" value="3">
+            </div>
+            <div class="record-actions span-2">
+              <button class="button" type="submit" id="quickFocusSubmit">儲存到個人重點</button>
+              <button class="small-button" type="button" id="quickFocusCancel">取消</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `);
+    dialog = document.querySelector("#quickFocusDialog");
+  }
+  return {
+    dialog,
+    form: dialog.querySelector("#quickFocusForm"),
+    title: dialog.querySelector("#quickFocusTitle"),
+    eyebrow: dialog.querySelector("#quickFocusEyebrow"),
+    message: dialog.querySelector("#quickFocusMessage"),
+    note: dialog.querySelector("#quickFocusNote"),
+    match: dialog.querySelector("#quickFocusMatch"),
+    matchValue: dialog.querySelector("#quickFocusMatchValue"),
+    submit: dialog.querySelector("#quickFocusSubmit"),
+    cancel: dialog.querySelector("#quickFocusCancel"),
+    close: dialog.querySelector("#quickFocusClose")
+  };
+}
+
+function promptFocusItem(flowerName, source = "") {
+  const flower = findFlower(flowerName);
+  if (!flower) return Promise.resolve(false);
+  const existing = readList(focusStorageKey).find((item) => item.flower === flowerName);
+  const refs = ensureQuickFocusDialog();
+
+  refs.title.textContent = existing ? `更新 ${flowerName}` : `加入 ${flowerName}`;
+  refs.eyebrow.textContent = existing ? "已在個人重點" : "加入個人重點";
+  refs.message.textContent = existing
+    ? `「${flowerName}」已經加入過。需要更新符合程度或備註嗎？`
+    : `將「${flower.no}. ${flowerName}」加入個人重點。`;
+  refs.note.value = existing?.reason || "";
+  refs.match.value = existing?.match || "3";
+  refs.matchValue.textContent = refs.match.value;
+  refs.submit.textContent = existing ? "更新重點" : "加入重點";
+  refs.dialog.hidden = false;
+  refs.note.focus();
+
+  return new Promise((resolve) => {
+    const cleanup = (result) => {
+      refs.dialog.hidden = true;
+      refs.form.onsubmit = null;
+      refs.cancel.onclick = null;
+      refs.close.onclick = null;
+      refs.dialog.onclick = null;
+      refs.match.oninput = null;
+      resolve(result);
+    };
+
+    refs.match.oninput = () => {
+      refs.matchValue.textContent = refs.match.value;
+    };
+    refs.form.onsubmit = (event) => {
+      event.preventDefault();
+      addFocusItem(flowerName, refs.note.value, refs.match.value, source);
+      cleanup(true);
+    };
+    refs.cancel.onclick = () => cleanup(false);
+    refs.close.onclick = () => cleanup(false);
+    refs.dialog.onclick = (event) => {
+      if (event.target === refs.dialog) cleanup(false);
+    };
+  });
+}
+
+async function addFocusFromButton(button, source) {
   const flowerName = button.dataset.addTrackFocus || button.dataset.addInlineFocus;
   if (!flowerName) return;
-  addFocusItem(flowerName, source);
+  if (!await promptFocusItem(flowerName, source)) return;
   button.textContent = "已加入重點";
   button.disabled = true;
 }
@@ -612,8 +738,8 @@ function renderNav(activeFile) {
     { label: "總覽", links: [["巴赫花精整理筆記.html", "首頁總覽"]] },
     { label: "分類法", links: [["core.html", "核心觀念"], ["categories.html", "巴赫七大分類"], ["rescue.html", "急救花精"], ["inner-outer.html", "內在 / 外在 / 基礎花精"], ["tracks.html", "十二軌道與分層"]] },
     { label: "身體反應區", links: [["body-map.html", "身體地圖查詢"], ["skin-guidelines.html", "使用準則與療癒實務"]] },
-    { label: "花精大全", links: [["flowers.html", "總表查詢"], ["comparison.html", "容易混淆"]] },
-    { label: "個人", links: [["decision.html", "判斷"], ["assessment.html", "個人評估"], ["dosage.html", "配置與劑量"], ["records.html", "紀錄"]] }
+    { label: "花精大全", links: [["flowers.html", "總表查詢"], ["comparison.html", "容易混淆"], ["dosage.html", "配置與劑量"]] },
+    { label: "個人", links: [["decision.html", "判斷"], ["assessment.html", "個人評估"], ["records.html", "紀錄"]] }
   ];
   const links = navGroups.flatMap((group) => group.links);
   const activeLabel = links.find(([href]) => href === activeFile)?.[1] || "筆記";
@@ -741,6 +867,7 @@ function renderFocusList() {
           <h3>${escapeHTML(flower.name)} <span class="english">${escapeHTML(flower.english)}</span></h3>
         </div>
         <span class="tag">${escapeHTML(flower.category)}</span>
+        ${item.source ? `<p><strong>加入來源：</strong>${escapeHTML(item.source)}</p>` : ""}
         ${item.reason ? `<p><strong>自身情況：</strong>${escapeHTML(item.reason)}</p>` : ""}
         ${item.match ? `<p><strong>匹配程度：</strong>${escapeHTML(item.match)} / 5</p>` : ""}
         <p><strong>負面特質：</strong>${escapeHTML(flower.negative)}</p>
@@ -936,7 +1063,7 @@ function renderSyncPanel() {
     .catch(() => setSyncStatus("無法讀取同步狀態。"));
 }
 
-function addFocusItem(flowerName, reason = "", match = "") {
+function addFocusItem(flowerName, reason = "", match = "", source = "") {
   const flower = findFlower(flowerName);
   if (!flower) return;
 
@@ -945,6 +1072,7 @@ function addFocusItem(flowerName, reason = "", match = "") {
   if (existing) {
     existing.reason = reason || existing.reason;
     existing.match = match || existing.match;
+    existing.source = source || existing.source;
     existing.updatedAt = Date.now();
     saveList(focusStorageKey, items);
     renderFocusList();
@@ -956,6 +1084,7 @@ function addFocusItem(flowerName, reason = "", match = "") {
     flower: flowerName,
     reason: reason.trim(),
     match,
+    source,
     createdAt: Date.now()
   });
   saveList(focusStorageKey, items);
@@ -975,7 +1104,7 @@ function initHomePage() {
   if (form) {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      addFocusItem(select.value, reason.value);
+      addFocusItem(select.value, reason.value, "3", "首頁重點");
       form.reset();
     });
   }
@@ -1121,7 +1250,7 @@ function initFlowersPage() {
   });
   focusDialogForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    addFocusItem(focusDialogFlower.value, focusDialogNote.value, focusDialogMatch.value);
+    addFocusItem(focusDialogFlower.value, focusDialogNote.value, focusDialogMatch.value, "花精大全");
     hideFocusDialog();
     render();
   });
@@ -1153,12 +1282,12 @@ function initTracksPage() {
     `;
   }
 
-  tableBody.addEventListener("click", (event) => {
+  tableBody.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-add-track-focus]");
     if (!button) return;
     const role = button.dataset.trackRole;
     const flowerName = button.dataset.addTrackFocus;
-    addFocusItem(flowerName, `從十二軌道與分層加入：${role}`);
+    if (!await promptFocusItem(flowerName, `十二軌道與分層｜${role}`)) return;
     button.textContent = "已加入";
     button.disabled = true;
     if (status) status.textContent = `已將「${flowerName}」加入個人重點。`;
@@ -1174,6 +1303,7 @@ function initBodyMapPage() {
   const figureImage = document.querySelector("#bodyFigureImage");
   const figureCaption = document.querySelector("#bodyFigureCaption");
   const hotspotLayer = document.querySelector("#bodyHotspots");
+  const bodyMapPanel = document.querySelector("#bodyMapPanel");
   const panelTitle = document.querySelector("#bodyMapTitle");
   const panelDescription = document.querySelector("#bodyMapDescription");
   const resultList = document.querySelector("#bodyReactionResults");
@@ -1189,18 +1319,41 @@ function initBodyMapPage() {
   let activeView = "front";
   let selectedPointId = "";
   let activeRegionKey = "";
+  let activeDetailKey = "";
+
+  const overviewTitleAliases = {
+    "頭部和右側胸肩": "右頸部",
+    "頭部和左側胸肩": "左頸部",
+    "右半側": "右側臉",
+    "左半側": "左側臉"
+  };
+
+  const overviewSourceTitleAliases = Object.fromEntries(
+    Object.entries(overviewTitleAliases).map(([sourceTitle, displayTitle]) => [displayTitle, sourceTitle])
+  );
+
+  function overviewDisplayTitle(title) {
+    return overviewTitleAliases[title] || title;
+  }
+
+  function overviewSourceTitle(title) {
+    return overviewSourceTitleAliases[title] || title;
+  }
 
   const entries = data.flowers.flatMap((flower) => (
-    flower.items.map((item, index) => ({
-      id: `${flower.no}-${index}`,
-      flowerNo: flower.no,
-      flowerName: flower.name,
-      title: item.title,
-      path: item.path,
-      isGenital: item.isGenital,
-      gender: item.gender,
-      side: item.side
-    }))
+    flower.items.map((rawItem, index) => {
+      const item = normalizeReactionItem(rawItem);
+      return {
+        id: `${flower.no}-${index}`,
+        flowerNo: flower.no,
+        flowerName: flower.name,
+        title: item.title,
+        path: item.path,
+        isGenital: item.isGenital,
+        gender: item.gender,
+        side: item.side
+      };
+    })
   ));
 
   function peoDetailPathForOverview(item) {
@@ -1217,8 +1370,8 @@ function initBodyMapPage() {
         "左手心": `${front}/左手心.png`,
         "右手臂（前方）": `${front}/右手臂正面.png`,
         "左手臂（前方）": `${front}/左手臂正面.png`,
-        "右半側": `${front}/軀幹（右側邊）.png`,
-        "左半側": `${front}/軀幹（左側邊）.png`,
+        "右半側": `${front}/右側臉.png`,
+        "左半側": `${front}/左側臉.png`,
         "右腿（內、外側）": `${front}/右腿內側.png`,
         "左腿（內、外側）": `${front}/左腿內側.png`,
         "正臉": `${front}/正臉.png`,
@@ -1226,8 +1379,10 @@ function initBodyMapPage() {
         "前頸": `${front}/前頸.png`,
         "腿部（正面）": `${front}/腿部（正面）.png`,
         "頭部": `${front}/正臉.png`,
-        "頭部和右側胸肩": `${front}/右側臉.png`,
-        "頭部和左側胸肩": `${front}/左側臉.png`,
+        "頭部和右側胸肩": `${front}/右頸部.png`,
+        "頭部和左側胸肩": `${front}/左頸部.png`,
+        "右頸部": `${front}/右頸部.png`,
+        "左頸部": `${front}/左頸部.png`,
         "軀幹（正面）": `${front}/身體正面.png`
       };
       return frontMap[title] || item.path.replace("花精身體反應區/地圖縱覽", `${base}/正面`);
@@ -1244,8 +1399,8 @@ function initBodyMapPage() {
       "腿部（背面）": `${back}/腿部（背面）.png`,
       "頭部和右側胸肩": `${back}/後腦.png`,
       "頭部和左側胸肩": `${back}/後腦.png`,
-      "軀幹（右側）": `${back}/軀幹（背面）.png`,
-      "軀幹（左側）": `${back}/軀幹（背面）.png`,
+      "軀幹（右側）": `${front}/軀幹（右側邊）.png`,
+      "軀幹（左側）": `${front}/軀幹（左側邊）.png`,
       "軀幹（背面）": `${back}/軀幹（背面）.png`
     };
     return backMap[title] || item.path.replace("花精身體反應區/地圖縱覽", `${base}/背面`);
@@ -1255,7 +1410,8 @@ function initBodyMapPage() {
     id: `overview-${index}`,
     flowerNo: "總覽",
     flowerName: "部位總覽",
-    title: item.title,
+    title: overviewDisplayTitle(item.title),
+    sourceTitle: item.title,
     path: item.path,
     transparentPath: item.transparentPath || item.path.replace("花精身體反應區/地圖縱覽", "assets/body-parts-transparent"),
     detailPath: item.detailPath || peoDetailPathForOverview(item),
@@ -1265,6 +1421,60 @@ function initBodyMapPage() {
     group: item.group,
     isOverview: true
   }));
+
+  function officialDetailViewsForOverview(overview) {
+    const key = overviewPointKey(overview);
+    const front = "peo/去數字之身體反應區/正面";
+    const back = "peo/去數字之身體反應區/背面";
+    const splitViews = {
+      "正面/右腿（內、外側）": [
+        { key: "正面/右腿外側", title: "右腿外側", path: `${front}/右腿外側.png` },
+        { key: "正面/右腿內側", title: "右腿內側", path: `${front}/右腿內側.png` }
+      ],
+      "正面/左腿（內、外側）": [
+        { key: "正面/左腿內側", title: "左腿內側", path: `${front}/左腿內側.png` },
+        { key: "正面/左腿外側", title: "左腿外側", path: `${front}/左腿外側.png` }
+      ],
+      "正面/生殖器（男）": [
+        { key: "正面/男生殖器右側", title: "男生殖器右側", path: `${front}/生殖器區/男生殖器右側.png` },
+        { key: "正面/男生殖器左側", title: "男生殖器左側", path: `${front}/生殖器區/男生殖器左側.png` }
+      ],
+      "正面/男下生殖器": [
+        { key: "正面/男下生殖器", title: "男下生殖器", path: `${front}/生殖器區/男生殖器下側.png` }
+      ],
+      "正面/頭部和右側胸肩": [
+        { key: "正面/右頸部", title: "右頸部", path: `${front}/右頸部.png` }
+      ],
+      "正面/頭部和左側胸肩": [
+        { key: "正面/左頸部", title: "左頸部", path: `${front}/左頸部.png` }
+      ],
+      "正面/右頸部": [
+        { key: "正面/右頸部", title: "右頸部", path: `${front}/右頸部.png` }
+      ],
+      "正面/左頸部": [
+        { key: "正面/左頸部", title: "左頸部", path: `${front}/左頸部.png` }
+      ],
+      "背面/軀幹（右側）": [
+        { key: "背面/軀幹（右側）", title: "軀幹右側", path: `${front}/軀幹（右側邊）.png` }
+      ],
+      "背面/軀幹（左側）": [
+        { key: "背面/軀幹（左側）", title: "軀幹左側", path: `${front}/軀幹（左側邊）.png` }
+      ]
+    };
+    return splitViews[key] || [{ key, title: overview.title, path: overview.detailPath || overview.path }];
+  }
+
+  function officialDetailKeyForRegion(overview, label) {
+    const views = officialDetailViewsForOverview(overview);
+    if (views.length === 1) return views[0].key;
+    const matched = views.find((view) => label && label.includes(view.title));
+    return (matched || views[0]).key;
+  }
+
+  function activeOfficialDetailView(overview) {
+    const views = officialDetailViewsForOverview(overview);
+    return views.find((view) => view.key === activeDetailKey) || views[0];
+  }
 
   const bodyMapPointAlignment = {
   "正面/女生殖器": {
@@ -1797,7 +2007,7 @@ function initBodyMapPage() {
   }
 
   function overviewByTitle(title) {
-    return overviewEntries.find((entry) => entry.title === title) || null;
+    return overviewEntries.find((entry) => entry.title === title || entry.sourceTitle === title) || null;
   }
 
   function overviewByAny(titles) {
@@ -1828,6 +2038,7 @@ function initBodyMapPage() {
     if (isTopHeadLabel(label)) return overviewByTitle("頭頂") || overviewByTitle("頭部");
     if (label.includes("頭")) return overviewByTitle(isBack || label.includes("後") ? "後腦" : "頭部");
     if (label.includes("後頸")) return overviewByTitle("後腦");
+    if (label.includes("頸") && side) return overviewByTitle(`頭部和${side}側胸肩`) || overviewByTitle("前頸");
     if (label.includes("頸")) return overviewByTitle("前頸");
     if (label.includes("手部")) return overviewByTitle(`${side || "右"}手${isBack ? "背" : "心"}`);
     if (label.includes("上臂") || label.includes("前臂")) return overviewByTitle(`${side || "右"}手臂（${isBack ? "後方" : "前方"}）`);
@@ -1845,46 +2056,51 @@ function initBodyMapPage() {
 
   const overviewReferencePoints = {
     front: {
-      "頭頂": { x: 50.17, y: 1.67 },
-      "正臉": { x: 50.25, y: 8.1 },
-      "頭部和右側胸肩": { x: 42.25, y: 16.14 },
-      "頭部和左側胸肩": { x: 58.67, y: 16.05 },
-      "前頸": { x: 50.42, y: 16.52 },
-      "右手臂（前方）": { x: 29.58, y: 32.81 },
-      "左手臂（前方）": { x: 72.25, y: 33.52 },
-      "右半側": { x: 37.75, y: 33.62 },
-      "左半側": { x: 62.92, y: 34.0 },
-      "軀幹（正面）": { x: 50.67, y: 34.19 },
-      "右手心": { x: 23.0, y: 50.52 },
-      "左手心": { x: 78.75, y: 50.29 },
-      "女生殖器": { x: 50.17, y: 50.86 },
-      "生殖器（男）": { x: 50.17, y: 50.86 },
-      "男下生殖器": { x: 50.17, y: 50.86 },
+      "頭頂": { x: 50.11, y: 1.64 },
+      "正臉": { x: 50.2, y: 8.04 },
+      "頭部和右側胸肩": { x: 42.12, y: 16.07 },
+      "頭部和左側胸肩": { x: 58.65, y: 16.0 },
+      "右頸部": { x: 42.12, y: 16.07 },
+      "左頸部": { x: 58.65, y: 16.0 },
+      "前頸": { x: 50.38, y: 16.51 },
+      "右手臂（前方）": { x: 29.52, y: 32.73 },
+      "左手臂（前方）": { x: 71.99, y: 33.46 },
+      "右半側": { x: 43.4, y: 8.37 },
+      "左半側": { x: 58.07, y: 8.29 },
+      "右側臉": { x: 43.4, y: 8.37 },
+      "左側臉": { x: 58.07, y: 8.29 },
+      "軀幹（正面）": { x: 50.56, y: 34.12 },
+      "右手心": { x: 22.86, y: 50.51 },
+      "左手心": { x: 78.63, y: 50.29 },
+      "女生殖器": { x: 50.08, y: 50.79 },
+      "生殖器（男）": { x: 50.08, y: 50.79 },
+      "男下生殖器": { x: 50.08, y: 50.79 },
       "右腿（內、外側）": [
-        { label: "右腿外側", x: 33.25, y: 57.24 },
-        { label: "右腿內側", x: 48.0, y: 57.33 }
+        { label: "右腿外側", x: 33.12, y: 57.22 },
+        { label: "右腿內側", x: 47.92, y: 57.32 }
       ],
       "左腿（內、外側）": [
-        { label: "左腿內側", x: 52.42, y: 57.52 },
-        { label: "左腿外側", x: 66.83, y: 57.62 }
+        { label: "左腿內側", x: 52.34, y: 57.45 },
+        { label: "左腿外側", x: 66.76, y: 57.63 }
       ],
       "腿部（正面）": [
-        { label: "腿部正面", x: 39.92, y: 65.38 },
-        { label: "腿部正面", x: 60.58, y: 65.57 }
+        { label: "腿部正面", x: 39.84, y: 65.3 },
+        { label: "腿部正面", x: 60.47, y: 65.53 }
       ]
     },
     back: {
-      "後腦": { x: 51.0, y: 7.43 },
-      "軀幹（背面）": { x: 50.67, y: 28.48 },
-      "左手臂（後方）": { x: 28.75, y: 37.38 },
-      "右手臂（後方）": { x: 73.92, y: 37.52 },
-      "左手背": { x: 22.67, y: 51.52 },
-      "右手背": { x: 78.33, y: 50.81 },
-      "軀幹（左側）": { x: 40.25, y: 65.33 },
-      "軀幹（右側）": { x: 60.92, y: 65.62 },
-      "腿部（背面）": { x: 54.75, y: 66.38 },
-      "左腳掌": { x: 34.08, y: 98.48 },
-      "右腳掌": { x: 67.17, y: 98.62 }
+      "後腦": { x: 50.9, y: 7.36 },
+      "軀幹（背面）": { x: 50.59, y: 28.39 },
+      "左手臂（後方）": { x: 28.59, y: 37.3 },
+      "右手臂（後方）": { x: 73.82, y: 37.47 },
+      "左手背": { x: 22.58, y: 51.49 },
+      "右手背": { x: 78.11, y: 50.79 },
+      "腿部（背面）": [
+        { label: "腿部背面", x: 40.13, y: 65.26 },
+        { label: "腿部背面", x: 60.89, y: 65.57 }
+      ],
+      "左腳掌": { x: 33.98, y: 98.4 },
+      "右腳掌": { x: 67.04, y: 98.57 }
     }
   };
 
@@ -1900,6 +2116,8 @@ function initBodyMapPage() {
     else if (title === "頭部") { x = 50; y = 5; }
     else if (title.includes("後腦")) { x = 50; y = 8; }
     else if (title.includes("前頸")) { x = 50; y = 15; }
+    else if (title.includes("右頸部")) { x = 42; y = 16; }
+    else if (title.includes("左頸部")) { x = 59; y = 16; }
     else if (title.includes("頭部和右側胸肩")) { x = 58; y = 20; }
     else if (title.includes("頭部和左側胸肩")) { x = 42; y = 20; }
     else if (title.includes("軀幹（正面）")) { x = 50; y = 39; }
@@ -1947,9 +2165,14 @@ function initBodyMapPage() {
     return `${group}/${overview.title}`;
   }
 
+  function overviewSourcePointKey(overview) {
+    const group = overview.group || (overview.side === "back" ? "背面" : "正面");
+    return `${group}/${overview.sourceTitle || overviewSourceTitle(overview.title)}`;
+  }
+
   function detectedNumberPointsForOverview(overview, flowerNo) {
     const pointData = typeof BODY_REACTION_POINTS !== "undefined" ? BODY_REACTION_POINTS : {};
-    const points = pointData[overviewPointKey(overview)] || [];
+    const points = pointData[overviewPointKey(overview)] || pointData[overviewSourcePointKey(overview)] || [];
     const matched = points.filter((point) => String(point.number) === String(flowerNo));
     const reliable = matched.filter((point) => Number(point.conf || 0) >= 35);
     return dedupeDetectedPoints(reliable.length ? reliable : matched);
@@ -1957,16 +2180,19 @@ function initBodyMapPage() {
 
   function detectedPointsForOverview(overview) {
     const pointData = typeof BODY_REACTION_POINTS !== "undefined" ? BODY_REACTION_POINTS : {};
-    return dedupeDetectedPoints(pointData[overviewPointKey(overview)] || []);
+    return dedupeDetectedPoints(pointData[overviewPointKey(overview)] || pointData[overviewSourcePointKey(overview)] || []);
   }
 
-  function overridePointsForOverview(overview) {
+  function overridePointsForOverview(overview, detailKey = "") {
+    const officialOverrideData = typeof BODY_REACTION_POINT_OFFICIAL_OVERRIDES !== "undefined" ? BODY_REACTION_POINT_OFFICIAL_OVERRIDES : {};
+    const officialPoints = officialOverrideData[detailKey] || officialOverrideData[overviewPointKey(overview)] || officialOverrideData[overviewSourcePointKey(overview)] || [];
+    if (officialPoints.length) return officialPoints.map((point) => ({ ...point, coordinateSpace: "official" }));
     const overrideData = typeof BODY_REACTION_POINT_OVERRIDES !== "undefined" ? BODY_REACTION_POINT_OVERRIDES : {};
-    return overrideData[overviewPointKey(overview)] || [];
+    return overrideData[overviewPointKey(overview)] || overrideData[overviewSourcePointKey(overview)] || [];
   }
 
   function alignDetectedPointToDetailImage(overview, point) {
-    const alignment = bodyMapPointAlignment[overviewPointKey(overview)];
+    const alignment = bodyMapPointAlignment[overviewPointKey(overview)] || bodyMapPointAlignment[overviewSourcePointKey(overview)];
     if (!alignment) return point;
     const [sourceLeft, sourceTop, sourceRight, sourceBottom] = alignment.sourceBox;
     const [targetLeft, targetTop, targetRight, targetBottom] = alignment.targetBox;
@@ -2016,6 +2242,7 @@ function initBodyMapPage() {
         mode: "region",
         regionLabel: entry.title,
         regionKey: `overview|${entry.id}`,
+        detailKey: officialDetailKeyForRegion(entry, point.label || entry.title),
         overviewTitle: entry.title,
         overviewPath: entry.transparentPath || entry.path,
         tooltip: point.label || entry.title,
@@ -2379,13 +2606,140 @@ function initBodyMapPage() {
     return { ...point, x, y };
   }
 
+  function titleMatchesAny(title, words) {
+    return words.some((word) => title.includes(word));
+  }
+
+  function closestEntriesForDetailView(overview, flowerEntries) {
+    const detailView = activeOfficialDetailView(overview);
+    const title = `${detailView?.title || ""} ${overview.title || ""} ${overview.sourceTitle || ""}`;
+    const matchers = [];
+
+    if (titleMatchesAny(title, ["頸"])) {
+      matchers.push((entryTitle) => titleMatchesAny(entryTitle, ["頸", "喉", "下巴"]));
+    }
+    if (titleMatchesAny(title, ["正臉", "側臉", "右側臉", "左側臉", "半側"])) {
+      matchers.push((entryTitle) => titleMatchesAny(entryTitle, ["臉", "頰", "眼", "鼻", "下巴", "額"]));
+    }
+    if (titleMatchesAny(title, ["頭頂"]) || (title.includes("頭部") && !title.includes("頸"))) {
+      matchers.push((entryTitle) => titleMatchesAny(entryTitle, ["頭頂", "後腦", "頭部", "頭", "頸", "額"]));
+    }
+    if (titleMatchesAny(title, ["手心", "手背", "手掌"])) {
+      matchers.push((entryTitle) => titleMatchesAny(entryTitle, ["手心", "手背", "手掌", "手部", "手"]));
+    }
+    if (titleMatchesAny(title, ["手臂", "上臂", "前臂"])) {
+      matchers.push((entryTitle) => titleMatchesAny(entryTitle, ["手臂", "上臂", "前臂"]));
+    }
+    if (titleMatchesAny(title, ["腿", "大腿", "小腿", "膝"])) {
+      matchers.push((entryTitle) => titleMatchesAny(entryTitle, ["腿", "大腿", "小腿", "膝"]));
+    }
+    if (titleMatchesAny(title, ["軀幹", "身體正面"])) {
+      matchers.push((entryTitle) => titleMatchesAny(entryTitle, ["胸", "腹", "背", "腰", "臀", "側身", "鼠蹊"]));
+    }
+    if (titleMatchesAny(title, ["生殖器"])) {
+      matchers.push((entryTitle) => titleMatchesAny(entryTitle, ["生殖器", "陰蒂", "陰唇", "陰莖", "龜頭", "前列腺"]));
+    }
+
+    for (const matcher of matchers) {
+      const matched = flowerEntries.filter((entry) => matcher(entry.title));
+      if (matched.length) return matched;
+    }
+    return [];
+  }
+
+  function headTopCandidatePoints(title) {
+    const points = [];
+    const hasRight = title.includes("右");
+    const hasLeft = title.includes("左");
+    const x = hasRight ? 30 : hasLeft ? 70 : 50;
+    if (title === "頭頂") points.push({ x: 50, y: 72 });
+    if (title.includes("後頸")) points.push({ x: 50, y: 74 });
+    else if (title.includes("頸")) points.push({ x: 50, y: 70 });
+    if (title.includes("額")) points.push({ x: 50, y: 84 });
+    if (title.includes("頭顱") || title.includes("頭部")) {
+      if (title.includes("上下")) {
+        points.push({ x, y: 18 }, { x, y: 52 });
+      } else if (title.includes("下")) {
+        points.push({ x, y: 52 });
+      } else {
+        points.push({ x, y: 22 });
+      }
+    }
+    if (title.includes("後")) points.push({ x, y: 68 });
+    if (title.includes("前") || title.includes("上")) points.push({ x, y: 18 });
+    return points;
+  }
+
+  function entryCandidatePointsOnOverview(overview, entry) {
+    const labels = splitPartLabels(entry);
+    const region = { view: overview.side, label: overview.title, regionKey: `overview|${overview.id}` };
+    const points = labels.map((label) => detailPointOnOverview(label, entry, region, overview));
+    if (overview.title === "頭頂") points.push(...headTopCandidatePoints(entry.title));
+    return points.filter((point) => Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y)));
+  }
+
+  function scoreEntryForDetailPoint(overview, point, entry) {
+    const candidates = entryCandidatePointsOnOverview(overview, entry);
+    if (!candidates.length) return Number.POSITIVE_INFINITY;
+    const px = Number(point.x);
+    const py = Number(point.y);
+    let score = Math.min(...candidates.map((candidate) => {
+      const dx = px - Number(candidate.x);
+      const dy = py - Number(candidate.y);
+      return (dx * dx) + (dy * dy * 1.25);
+    }));
+
+    if (overview.title === "頭頂") {
+      if (entry.title === "頭頂" && py < 48) score += 900;
+      if (entry.title !== "頭頂" && py > 62 && !titleMatchesAny(entry.title, ["後", "頸", "額"])) score += 500;
+    }
+    return score;
+  }
+
+  function disambiguateEntriesForPoint(overview, point, pointEntries) {
+    if (pointEntries.length <= 1) return pointEntries;
+    const flowerNames = new Set(pointEntries.map((entry) => entry.flowerName));
+    if (flowerNames.size !== 1) return pointEntries;
+
+    const scored = pointEntries
+      .map((entry) => ({ entry, score: scoreEntryForDetailPoint(overview, point, entry) }))
+      .sort((a, b) => a.score - b.score);
+    if (!Number.isFinite(scored[0]?.score)) return pointEntries.slice(0, 1);
+    return [scored[0].entry];
+  }
+
+  function preferredHeadTopEntriesForPoint(overview, point, pointEntries) {
+    if (overview.title !== "頭頂" || pointEntries.length <= 1) return [];
+    const px = Number(point.x);
+    const py = Number(point.y);
+    if (!Number.isFinite(px) || !Number.isFinite(py)) return [];
+
+    const titles = (words) => pointEntries.filter((entry) => titleMatchesAny(entry.title, words));
+    if (py >= 76 && px >= 38 && px <= 62) return titles(["額"]);
+    if (py >= 62 && px >= 38 && px <= 62) return titles(["額", "頸"]);
+    if (py <= 24 && px >= 38 && px <= 62) return titles(["頭頂", "頭顱上", "頭部上"]);
+    return [];
+  }
+
   function detailPointFromNumber(overview, point, index) {
-    const adjustedPoint = edgeArrowAdjustedPoint(point);
+    const alignedPoint = point.coordinateSpace === "official" ? point : alignDetectedPointToDetailImage(overview, point);
+    const adjustedPoint = edgeArrowAdjustedPoint(alignedPoint);
     const flowerEntriesForNumber = entries.filter((entry) => String(entry.flowerNo) === String(point.number));
     const overviewMatchedEntries = flowerEntriesForNumber.filter((entry) => overviewMatchesEntry(overview, entry));
-    const pointEntries = overviewMatchedEntries.length ? overviewMatchedEntries : flowerEntriesForNumber;
+    const proximityEntries = closestEntriesForDetailView(overview, flowerEntriesForNumber);
+    const closestEntries = overview.title === "頭頂" && proximityEntries.length
+      ? Array.from(new Map([...overviewMatchedEntries, ...proximityEntries].map((entry) => [entry.id, entry])).values())
+      : (overviewMatchedEntries.length ? overviewMatchedEntries : proximityEntries);
+    const candidateEntries = closestEntries.length ? closestEntries : flowerEntriesForNumber.slice(0, 1);
+    const headTopPreferredEntries = preferredHeadTopEntriesForPoint(overview, adjustedPoint, candidateEntries);
+    const pointEntries = disambiguateEntriesForPoint(
+      overview,
+      adjustedPoint,
+      headTopPreferredEntries.length ? headTopPreferredEntries : candidateEntries
+    );
     const flowerNames = Array.from(new Set(pointEntries.map((entry) => entry.flowerName)));
     const label = point.label || flowerNames.join("、") || `編號 ${point.number}`;
+    const matchedParts = Array.from(new Set(pointEntries.map((entry) => entry.title))).filter(Boolean);
     return {
       id: `point-${index}`,
       label,
@@ -2401,14 +2755,23 @@ function initBodyMapPage() {
       overviewPath: overview.path,
       originalOverviewPath: overview.path,
       entries: pointEntries,
-      parts: flowerNames
+      parts: matchedParts.length ? matchedParts : flowerNames
     };
   }
 
+  function detailPointMatchesGender(point) {
+    const gender = activeBodyGender || effectiveGender();
+    if (gender === "all") return true;
+    return !point.gender || point.gender === "all" || point.gender === gender;
+  }
+
   function buildDetailPointsForOverview(overview, filteredEntries) {
-    const overridePoints = overridePointsForOverview(overview);
+    const detailView = activeOfficialDetailView(overview);
+    const overridePoints = overridePointsForOverview(overview, detailView.key);
     if (overridePoints.length) {
-      return overridePoints.map((point, index) => detailPointFromNumber(overview, { ...point, manual: true }, index));
+      return overridePoints
+        .filter(detailPointMatchesGender)
+        .map((point, index) => detailPointFromNumber(overview, { ...point, manual: true }, index));
     }
 
     const detectedOverviewPoints = detectedPointsForOverview(overview);
@@ -2611,6 +2974,7 @@ function initBodyMapPage() {
           data-point-id="${escapeHTML(point.id)}"
           data-point-mode="${escapeHTML(point.mode)}"
           data-region-key="${escapeHTML(point.regionKey)}"
+          data-detail-key="${escapeHTML(point.detailKey || "")}"
           data-marker-number="${escapeHTML(point.markerNumber || "")}"
           style="left:${point.x}%;top:${point.y}%"
           aria-label="${escapeHTML(point.label)}，${point.tooltip || `${point.entries.length} 張參考圖`}"
@@ -2647,11 +3011,12 @@ function initBodyMapPage() {
   function renderFigure() {
     const overview = overviewForRegionKey(activeRegionKey);
     if (overview) {
+      const detailView = activeOfficialDetailView(overview);
       figure.dataset.activeView = activeView;
       figure.dataset.detailMode = "true";
-      figureImage.src = overview.path;
-      figureImage.alt = `${overview.title}放大細節圖`;
-      figureCaption.textContent = `${overview.title}｜放大細節`;
+      figureImage.src = detailView.path || overview.detailPath || overview.path;
+      figureImage.alt = `${detailView.title || overview.title}放大細節圖`;
+      figureCaption.textContent = `${detailView.title || overview.title}｜放大細節`;
       return;
     }
     const isBack = activeView === "back";
@@ -2664,27 +3029,36 @@ function initBodyMapPage() {
     figureCaption.textContent = `${genderText}｜${viewText}`;
   }
 
+  function openBodyMapPanel() {
+    bodyMapPanel.hidden = false;
+    window.requestAnimationFrame(() => {
+      document.body.classList.add("body-map-modal-open");
+    });
+  }
+
+  function closeBodyMapPanel() {
+    document.body.classList.remove("body-map-modal-open");
+    window.setTimeout(() => {
+      if (!document.body.classList.contains("body-map-modal-open")) bodyMapPanel.hidden = true;
+    }, 190);
+  }
+
   function renderRegionPanel(points) {
-    panelTitle.textContent = "請先選擇身體部位";
-    panelDescription.textContent = "先點身體圖上的部位點，中心圖會切換成該部位的放大圖，再點放大圖上的細節點查看對應花精。";
-    resultList.innerHTML = points.length
-      ? points.map((point) => `
-        <button class="reaction-flower-button" type="button" data-region-jump="${escapeHTML(point.regionKey)}">
-          <span>${escapeHTML(point.label)}</span>
-          <small>${point.entries.length}</small>
-        </button>
-      `).join("")
-      : '<p class="empty-state">目前篩選下這一側沒有可選部位。</p>';
+    closeBodyMapPanel();
+    panelTitle.textContent = "";
+    panelDescription.textContent = "";
+    resultList.innerHTML = "";
   }
 
   function renderPointPanel(point) {
+    openBodyMapPanel();
     const flowerCount = new Set(point.entries.filter((entry) => !entry.isOverview).map((entry) => entry.flowerName)).size;
     const overviewCount = point.entries.filter((entry) => entry.isOverview).length;
     panelTitle.textContent = `${point.regionLabel} / ${point.label}｜${flowerCount} 種花精${overviewCount ? `＋${overviewCount} 張總覽` : ""}`;
     const partSummary = point.parts.length ? `包含：${point.parts.slice(0, 8).join("、")}${point.parts.length > 8 ? "等" : ""}。` : "";
     panelDescription.innerHTML = `
       <button class="small-button" type="button" data-reset-body-region>返回部位選擇</button>
-      <span>${escapeHTML(point.overviewTitle || sideLabel(point.view))} 目前整理到 ${point.entries.length} 張參考圖。${point.markerNumber ? `原圖編號：${escapeHTML(point.markerNumber)}。` : ""}${escapeHTML(partSummary)}生殖器相關內容統一收在「生殖器區」點內，點開後再分男女性細項。</span>
+      <span>${point.markerNumber ? `編號 ${escapeHTML(point.markerNumber)}｜` : ""}${point.entries.length} 張參考圖。${escapeHTML(partSummary)}</span>
     `;
     resultList.innerHTML = point.entries.map((entry) => {
       const flower = findFlower(entry.flowerName);
@@ -2702,7 +3076,32 @@ function initBodyMapPage() {
               ${entry.isGenital ? "<span>生殖器細項</span>" : ""}
               ${entry.isOverview ? "<span>總覽圖</span>" : ""}
             </div>
-            ${flower ? `<button class="small-button" type="button" data-add-map-focus="${escapeHTML(flower.name)}">加入個人紀錄</button>` : ""}
+            ${flower ? `
+              <div class="record-actions">
+                <button class="small-button" type="button" data-add-map-focus="${escapeHTML(flower.name)}" data-focus-source="${escapeHTML(`身體地圖｜${point.regionLabel}｜${point.label}`)}">加入重點</button>
+              </div>
+              ${flowerReactionItems(flower.name).filter((item) => item.path !== entry.path).length ? `
+                <details class="body-map-more-reactions">
+                  <summary>查看${escapeHTML(flower.name)}其他部位反應區</summary>
+                  <div class="reaction-result-list compact">
+                    ${flowerReactionItems(flower.name).filter((item) => item.path !== entry.path).map((item) => `
+                      <article class="reaction-row">
+                        <a class="reaction-thumb" href="${escapeHTML(item.path)}" target="_blank" rel="noreferrer">
+                          <img src="${escapeHTML(item.path)}" alt="${escapeHTML(flower.name)} ${escapeHTML(item.title)}" loading="lazy">
+                        </a>
+                        <div>
+                          <h3>${escapeHTML(item.title)}</h3>
+                          <div class="reaction-tags">
+                            <span>${escapeHTML(sideLabel(item.side))}</span>
+                            <span>${escapeHTML(genderLabel(item.gender))}</span>
+                          </div>
+                        </div>
+                      </article>
+                    `).join("")}
+                  </div>
+                </details>
+              ` : ""}
+            ` : ""}
           </div>
         </article>
       `;
@@ -2710,13 +3109,14 @@ function initBodyMapPage() {
   }
 
   function renderOverviewPanel(overview, filteredEntries, detailPoints = []) {
+    closeBodyMapPanel();
     const matchedEntries = filteredEntries.filter((entry) => overviewMatchesEntry(overview, entry));
     const flowerCount = new Set(matchedEntries.map((entry) => entry.flowerName)).size;
     panelTitle.textContent = `${overview.title}｜${detailPoints.length} 個細節點`;
     panelDescription.innerHTML = `
       <button class="small-button" type="button" data-reset-body-region>返回部位選擇</button>
       <a class="small-button" href="${escapeHTML(overview.path)}" target="_blank" rel="noreferrer">查看原版分區圖</a>
-      <span>此部位目前整理到 ${matchedEntries.length} 張花精反應圖、${flowerCount} 種花精。放大圖直接使用原版分區圖；黑點會蓋在原本數字的位置上。請點黑點查看原圖數字與對應花精。</span>
+      <span>${matchedEntries.length} 張反應圖，${flowerCount} 種花精。</span>
     `;
     resultList.innerHTML = detailPoints.length
       ? detailPoints.map((point) => `
@@ -2729,6 +3129,8 @@ function initBodyMapPage() {
   }
 
   function renderEmptyPanel() {
+    if (activeRegionKey) openBodyMapPanel();
+    else closeBodyMapPanel();
     panelTitle.textContent = "請點選身體反應點";
     panelDescription.textContent = activeRegionKey
       ? "這個部位目前沒有符合篩選條件的細節點。"
@@ -2740,6 +3142,7 @@ function initBodyMapPage() {
     activeMode = mode;
     selectedPointId = "";
     activeRegionKey = "";
+    activeDetailKey = "";
     modeButtons.forEach((button) => {
       button.classList.toggle("active", button.dataset.reactionMode === mode);
       button.setAttribute("aria-pressed", button.dataset.reactionMode === mode ? "true" : "false");
@@ -2751,6 +3154,7 @@ function initBodyMapPage() {
     activeGender = gender;
     selectedPointId = "";
     activeRegionKey = "";
+    activeDetailKey = "";
     genderButtons.forEach((button) => {
       button.classList.toggle("active", button.dataset.reactionGender === gender);
       button.setAttribute("aria-pressed", button.dataset.reactionGender === gender ? "true" : "false");
@@ -2762,6 +3166,7 @@ function initBodyMapPage() {
     activeView = view;
     selectedPointId = "";
     activeRegionKey = "";
+    activeDetailKey = "";
     viewButtons.forEach((button) => {
       button.classList.toggle("active", button.dataset.bodyView === view);
       button.setAttribute("aria-pressed", button.dataset.bodyView === view ? "true" : "false");
@@ -2773,6 +3178,7 @@ function initBodyMapPage() {
     activeBodyGender = gender;
     selectedPointId = "";
     activeRegionKey = "";
+    activeDetailKey = "";
     bodyGenderButtons.forEach((button) => {
       button.classList.toggle("active", button.dataset.bodyGender === gender);
       button.setAttribute("aria-pressed", button.dataset.bodyGender === gender ? "true" : "false");
@@ -2783,6 +3189,7 @@ function initBodyMapPage() {
   searchInput.addEventListener("input", () => {
     selectedPointId = "";
     activeRegionKey = "";
+    activeDetailKey = "";
     renderResults();
   });
   modeButtons.forEach((button) => {
@@ -2846,12 +3253,13 @@ function initBodyMapPage() {
     pointButton.addEventListener("pointercancel", stopDrag);
   });
 
-  document.querySelector(".reaction-map-app").addEventListener("click", (event) => {
+  document.querySelector(".reaction-map-app").addEventListener("click", async (event) => {
     const pointButton = event.target.closest("[data-point-id]");
     if (pointButton) {
       if (suppressPointClick) return;
       if (pointButton.dataset.pointMode === "region") {
         activeRegionKey = pointButton.dataset.regionKey;
+        activeDetailKey = pointButton.dataset.detailKey || "";
         selectedPointId = "";
       } else {
         selectedPointId = pointButton.dataset.pointId;
@@ -2862,6 +3270,7 @@ function initBodyMapPage() {
     const regionJump = event.target.closest("[data-region-jump]");
     if (regionJump) {
       activeRegionKey = regionJump.dataset.regionJump;
+      activeDetailKey = "";
       selectedPointId = "";
       renderResults();
       return;
@@ -2869,14 +3278,24 @@ function initBodyMapPage() {
     const resetRegionButton = event.target.closest("[data-reset-body-region]");
     if (resetRegionButton) {
       activeRegionKey = "";
+      activeDetailKey = "";
       selectedPointId = "";
+      renderResults();
+      return;
+    }
+    const closePanelButton = event.target.closest("[data-close-body-panel]");
+    if (closePanelButton) {
+      selectedPointId = "";
+      closeBodyMapPanel();
       renderResults();
       return;
     }
     const addButton = event.target.closest("[data-add-map-focus]");
     if (!addButton) return;
-    addFocusItem(addButton.dataset.addMapFocus);
-    addButton.textContent = "已加入個人紀錄";
+    const flowerName = addButton.dataset.addMapFocus;
+    const source = addButton.dataset.focusSource || "身體地圖";
+    if (!await promptFocusItem(flowerName, source)) return;
+    addButton.textContent = "已加入重點";
     addButton.disabled = true;
   });
 
@@ -3043,7 +3462,7 @@ function initDecisionPage() {
     `;
   }
 
-  options.addEventListener("click", (event) => {
+  options.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-answer-index]");
     if (!button) return;
     const current = questions[step];
@@ -3073,14 +3492,12 @@ function initDecisionPage() {
     renderQuestion();
   });
 
-  result.addEventListener("click", (event) => {
+  result.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-add-decision-focus]");
     if (!button) return;
     const flowerName = button.dataset.addDecisionFocus;
-    const ok = window.confirm(`要把「${flowerName}」加入個人紀錄嗎？`);
-    if (!ok) return;
-    addFocusItem(flowerName, "由判斷流程加入，之後可在個人紀錄補充備註。", "3");
-    button.textContent = "已加入個人紀錄";
+    if (!await promptFocusItem(flowerName, "判斷流程")) return;
+    button.textContent = "已加入重點";
     button.disabled = true;
   });
 

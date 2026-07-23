@@ -4,11 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>新巴赫花精大全｜身體地圖查詢</title>
-  <link rel="stylesheet" href="styles.css?v=20260722-4">
-  <script src="body-map-data.js?v=20260722-4" defer></script>
-  <script src="body-map-points.js?v=20260722-4" defer></script>
-  <script src="body-map-point-overrides.js?v=20260722-4" defer></script>
-  <script src="data.js?v=20260722-4" defer></script>
+  <link rel="stylesheet" href="styles.css?v=20260723-40">
+  <script src="body-map-data.js?v=20260723-40" defer></script>
+  <script src="body-map-points.js?v=20260723-40" defer></script>
+  <script src="body-map-point-overrides.js?v=20260723-40" defer></script>
+  <script src="body-map-point-official-overrides.js?v=20260723-40" defer></script>
+  <script src="data.js?v=20260723-40" defer></script>
   <script defer>document.addEventListener("DOMContentLoaded", () => initBodyMapPage());</script>
 </head>
 <body>
@@ -18,7 +19,6 @@
     <section class="body-map-section">
       <div class="section-heading">
         <p class="eyebrow">身體反應區</p>
-        <p>點擊身體區域，查看該區目前整理到的對應花精。使用前可搭配「使用準則與療癒實務」判斷是否適合處理。</p>
       </div>
 
       <section class="reaction-map-app" aria-label="花精身體反應區互動表">
@@ -53,9 +53,11 @@
             </figure>
           </div>
 
-          <aside class="body-map-panel reaction-preview-panel" id="bodyMapPanel" aria-live="polite">
-            <p class="eyebrow">目前反應點</p>
-            <h2 id="bodyMapTitle">請點選身體反應點</h2>
+          <aside class="body-map-panel reaction-preview-panel body-map-modal" id="bodyMapPanel" aria-live="polite" aria-label="身體反應點結果" hidden>
+            <div class="body-map-modal-header">
+              <h2 id="bodyMapTitle">請點選身體反應點</h2>
+              <button class="body-map-modal-close" type="button" data-close-body-panel aria-label="關閉反應點結果">×</button>
+            </div>
             <p id="bodyMapDescription">黑點代表目前篩選條件下的反應區。點擊後可查看花精與原始參考圖。</p>
             <div id="bodyReactionResults" class="reaction-result-list compact"></div>
           </aside>
