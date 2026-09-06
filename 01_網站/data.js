@@ -39,6 +39,47 @@ const flowers = [
   { no: 38, name: "楊柳", english: "Willow", category: "沮喪、絕望", negative: "記仇、憤世忌俗、覺得自己被不公平對待", positive: "選擇慷慨", image: "https://upload.wikimedia.org/wikipedia/commons/f/f8/Salix_alba_leaves.jpg", imageAlt: "Willow leaves" }
 ];
 
+const flowerOilGemstoneRows = [
+  { no: 1, oil: "Sandelholz 東印度檀香", gemstone: "Onyx 黑瑪瑙" },
+  { no: 2, oil: "Rosenholz 花梨木", gemstone: "Bergkristall 白水晶" },
+  { no: 3, oil: "Opoponax 苦蓬", gemstone: "Magnetti 磁鐵礦" },
+  { no: 4, oil: "Thymian 百里香", gemstone: "Rosenquarz 粉晶" },
+  { no: 5, oil: "Vetivier 岩蘭草", gemstone: "Rauchquarz 煙晶" },
+  { no: 6, oil: "Meerkiefer 海岸松", gemstone: "Saphir 藍寶石" },
+  { no: 7, oil: "Cascarilla 香苦木", gemstone: "Epidot 綠簾石" },
+  { no: 8, oil: "Anis 洋茴香", gemstone: "Diamant 鑽石" },
+  { no: 9, oil: "Eukalyptus citro 檸檬尤加利", gemstone: "Pyrop 鎂鋁榴石" },
+  { no: 10, oil: "Schopflavendel 頭狀薰衣草", gemstone: "Citrine 黃水晶" },
+  { no: 11, oil: "Zitrone 檸檬", gemstone: "Chalcedon 玉髓(藍紋)" },
+  { no: 12, oil: "Lemongras 檸檬香茅", gemstone: "Jaspis (rot) 碧玉(紅色)" },
+  { no: 13, oil: "Orange 甜橙", gemstone: "Rhodochrosit 菱錳礦" },
+  { no: 14, oil: "Clementine 克萊蒙橙", gemstone: "Malachit 孔雀石" },
+  { no: 15, oil: "Rose 大馬士革玫瑰", gemstone: "Achat (Braun) 瑪瑙(棕色)" },
+  { no: 16, oil: "Immortelle 義大利永久花", gemstone: "Heliotrop 印度血石" },
+  { no: 17, oil: "Birkenholz 樺木", gemstone: "Schneeflockenobsidian 雪花黑曜石" },
+  { no: 18, oil: "Zypresse 絲柏", gemstone: "Sodalith 方鈉石" },
+  { no: 19, oil: "Bayfrüchte 西印度月桂(果)", gemstone: "Moosachat 苔蘚瑪瑙" },
+  { no: 20, oil: "Cistrose 岩薔薇", gemstone: "Jade (grün)玉(綠色)" },
+  { no: 21, oil: "Muskatellersalbei 快樂鼠尾草", gemstone: "Honigcalcit 蜂蜜方解石" },
+  { no: 22, oil: "Ingwer 薑", gemstone: "Fluorit 螢石" },
+  { no: 23, oil: "Tabak 菸草", gemstone: "Milchquarz 乳石英" },
+  { no: 24, oil: "Perubalsam 祕魯香脂", gemstone: "Lapislazuli 青金石" },
+  { no: 25, oil: "Magnolie 木蘭花", gemstone: "Smaragd 祖母綠" },
+  { no: 26, oil: "Tulsi 聖羅勒", gemstone: "Uwarowit 鈣鉻榴石" },
+  { no: 27, oil: "Hyazinthe 風信子", gemstone: "Haematit 赤鐵礦" },
+  { no: 28, oil: "Raventsara anisatum 洋茴香羅文莎葉", gemstone: "Rhodonit 薔薇輝石" },
+  { no: 29, oil: "Patcholi 印尼廣藿香", gemstone: "Karneol 光玉髓" },
+  { no: 30, oil: "Jasmin 茉莉", gemstone: "Azurit 藍銅礦" },
+  { no: 31, oil: "Styrax 安息香", gemstone: "Rubin 紅寶石" },
+  { no: 32, oil: "Schafgarbe 西洋蓍草", gemstone: "Zirkon (braun) 鋯石(棕色)" },
+  { no: 33, oil: "Narzisse 水仙", gemstone: "Tuerkis 綠松石" },
+  { no: 34, oil: "Vanille 香草", gemstone: "Chrysokoll 矽孔雀石" },
+  { no: 35, oil: "Geranium 香葉天竺葵", gemstone: "Kunzit 紫鋰輝石" },
+  { no: 36, oil: "Narde 穗甘松", gemstone: "Chrysopras 綠玉髓" },
+  { no: 37, oil: "Grapefruit 葡萄柚", gemstone: "Sarder 紅玉髓" },
+  { no: 38, oil: "Galbanum 白松香", gemstone: "Topas (gelb) 拓帕石(黃色)" }
+];
+
 const focusStorageKey = "bachFlowerFocusList.v1";
 const recordStorageKey = "bachFlowerSelfRecords.v1";
 const syncDbName = "bachFlowerSyncDb";
@@ -738,7 +779,7 @@ function renderNav(activeFile) {
     { label: "總覽", links: [["巴赫花精整理筆記.html", "首頁總覽"]] },
     { label: "分類法", links: [["core.html", "核心觀念"], ["categories.html", "巴赫七大分類"], ["rescue.html", "急救花精"], ["inner-outer.html", "內在 / 外在 / 基礎花精"], ["tracks.html", "十二軌道與分層"]] },
     { label: "身體反應區", links: [["body-map.html", "身體地圖查詢"], ["skin-guidelines.html", "使用準則與療癒實務"]] },
-    { label: "花精大全", links: [["flowers.html", "總表查詢"], ["comparison.html", "容易混淆"], ["dosage.html", "配置與劑量"]] },
+    { label: "花精大全", links: [["flowers.html", "總表查詢"], ["essence-oil-gemstone.html", "花精精油礦石"], ["comparison.html", "容易混淆"], ["dosage.html", "配置與劑量"]] },
     { label: "個人", links: [["decision.html", "判斷"], ["assessment.html", "個人評估"], ["records.html", "紀錄"]] }
   ];
   const links = navGroups.flatMap((group) => group.links);
@@ -1143,7 +1184,8 @@ function initFlowersPage() {
     const selectedCategory = category.value;
     const focusedFlowers = focusFlowerNames();
     const filtered = flowers.filter((flower) => {
-      const haystack = `${flower.no} ${flower.name} ${flower.english} ${flower.category} ${flower.negative} ${flower.positive}`.toLowerCase();
+      const oilGemstone = flowerOilGemstoneRows.find((row) => row.no === flower.no);
+      const haystack = `${flower.no} ${flower.name} ${flower.english} ${flower.category} ${flower.negative} ${flower.positive} ${oilGemstone?.oil || ""} ${oilGemstone?.gemstone || ""}`.toLowerCase();
       return (!query || haystack.includes(query)) && (!selectedCategory || flower.category === selectedCategory);
     });
 
@@ -1174,6 +1216,7 @@ function initFlowersPage() {
 
     const trackRoles = flowerTrackRoles(flower.name);
     const reactionItems = flowerReactionItems(flower.name);
+    const oilGemstone = flowerOilGemstoneRows.find((row) => row.no === flower.no);
     const reactionText = reactionItems.length
       ? compactReactionLabels(reactionItems)
       : "尚未整理到身體反應區資料，或此頁未載入反應區資料。";
@@ -1191,6 +1234,8 @@ function initFlowersPage() {
         <div><dt>所在分類</dt><dd>${escapeHTML(flower.category)}</dd></div>
         <div><dt>十二軌道</dt><dd>${trackRoles.length ? trackRoles.map(escapeHTML).join("<br>") : "不在目前整理的十二軌道表中，可能屬於外在或基礎花精脈絡。"}</dd></div>
         <div><dt>身體反應區</dt><dd>${escapeHTML(reactionText)}</dd></div>
+        <div><dt>對應精油</dt><dd>${escapeHTML(oilGemstone?.oil || "尚未整理")}</dd></div>
+        <div><dt>對應礦石</dt><dd>${escapeHTML(oilGemstone?.gemstone || "尚未整理")}</dd></div>
         <div><dt>特質 / 症狀</dt><dd>${escapeHTML(flower.negative)}</dd></div>
         <div><dt>正面方向</dt><dd>${escapeHTML(flower.positive)}</dd></div>
         <div><dt>使用後觀察</dt><dd>觀察情緒強度、觸發情境、身體反應與是否更接近其他花精。</dd></div>
